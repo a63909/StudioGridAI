@@ -1,0 +1,664 @@
+{
+  "scenarioId": "DEMO_DAY_01",
+  "productionId": "PROD_LAST_LIGHT_001",
+  "shootDayId": "DAY_001",
+  "title": "Demo Shoot Day — LAST LIGHT Day 1",
+  "description": "Full demo scenario for StudioGrid AI. Includes: actor delay with schedule proposal, coverage alert, continuity conflict, and wrap report.",
+  "events": [
+    {
+      "step": 1,
+      "time": "08:00",
+      "eventType": "SHOOT_DAY_STARTED",
+      "originType": "HUMAN",
+      "originId": "production_manager",
+      "source": "production_manager",
+      "payload": {
+        "shootDayId": "DAY_001",
+        "productionId": "PROD_LAST_LIGHT_001",
+        "plannedShotCount": 25,
+        "plannedSceneCount": 10,
+        "notes": "Day 1 of LAST LIGHT. Full cast required."
+      },
+      "description": "Production Manager starts the shoot day."
+    },
+    {
+      "step": 2,
+      "time": "08:15",
+      "eventType": "SHOT_STARTED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_01", "sceneId": "SC_01" },
+      "description": "First AD calls action on SC01_MASTER."
+    },
+    {
+      "step": 3,
+      "time": "08:38",
+      "eventType": "SHOT_COMPLETED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_01", "sceneId": "SC_01", "actualDurationMinutes": 23 },
+      "description": "SC01_MASTER completed. Good take in the can."
+    },
+    {
+      "step": 4,
+      "time": "08:42",
+      "eventType": "SHOT_STARTED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_02", "sceneId": "SC_01" },
+      "description": "Moving to SC01_CU_THOMAS."
+    },
+    {
+      "step": 5,
+      "time": "08:55",
+      "eventType": "SHOT_COMPLETED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_02", "sceneId": "SC_01", "actualDurationMinutes": 13 },
+      "description": "SC01_CU_THOMAS completed."
+    },
+    {
+      "step": 6,
+      "time": "09:00",
+      "eventType": "SHOT_STARTED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_03", "sceneId": "SC_01" },
+      "description": "SC01_INSERT_NOTICE — insert of demolition notice."
+    },
+    {
+      "step": 7,
+      "time": "09:10",
+      "eventType": "SHOT_COMPLETED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_03", "sceneId": "SC_01", "actualDurationMinutes": 10 },
+      "description": "SC01_INSERT_NOTICE completed. SC_01 fully covered."
+    },
+    {
+      "step": 8,
+      "time": "09:15",
+      "eventType": "SHOT_STARTED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_04", "sceneId": "SC_02" },
+      "description": "Moving to SC_02. SC02_MASTER."
+    },
+    {
+      "step": 9,
+      "time": "09:33",
+      "eventType": "SHOT_COMPLETED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_04", "sceneId": "SC_02", "actualDurationMinutes": 18 },
+      "description": "SC02_MASTER completed."
+    },
+    {
+      "step": 10,
+      "time": "09:38",
+      "eventType": "SHOT_STARTED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_05", "sceneId": "SC_02" },
+      "description": "SC02_CU_HAND."
+    },
+    {
+      "step": 11,
+      "time": "09:48",
+      "eventType": "SHOT_COMPLETED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_05", "sceneId": "SC_02", "actualDurationMinutes": 10 },
+      "description": "SC02_CU_HAND completed. SC_02 fully covered."
+    },
+    {
+      "step": 12,
+      "time": "09:52",
+      "eventType": "SHOT_STARTED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_06", "sceneId": "SC_03" },
+      "description": "SC_03 — Memory Flood. SC03_MASTER."
+    },
+    {
+      "step": 13,
+      "time": "10:10",
+      "eventType": "SHOT_COMPLETED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_06", "sceneId": "SC_03", "actualDurationMinutes": 18 },
+      "description": "SC03_MASTER completed. 7 shots complete, 18 planned for today."
+    },
+    {
+      "step": 14,
+      "time": "10:12",
+      "eventType": "ACTOR_DELAYED",
+      "originType": "HUMAN",
+      "originId": "production_manager",
+      "source": "production_manager",
+      "payload": {
+        "actorId": "ACT_02",
+        "actorName": "Maya Reed",
+        "delayMinutes": 45,
+        "reason": "Transport issue — taxi no-show. ETA revised to 10:57.",
+        "originalAvailableFromTime": "09:00",
+        "revisedAvailableFromTime": "10:57"
+      },
+      "description": "ACTOR DELAYED: Maya Reed (Elara) delayed 45 minutes. Triggers Schedule Agent analysis.",
+      "expectedAgentResponse": {
+        "agent": "SCHEDULE_AGENT",
+        "analysis": "Scenes requiring ACT_02: SC_04, SC_05, SC_07, SC_09. SC_08 requires only ACT_03 and ACT_04 — both present. SC_08 has dependency on SC_03 (CONTINUITY_REQUIRED — wardrobe continuity of Young Thomas). SC_03 MASTER is complete. SC_08 can proceed immediately. Estimated benefit: 37 minutes recovered.",
+        "proposal": {
+          "action": "Move SC_08 to current position (before SC_04 and SC_05)",
+          "why": "SC_08 requires ACT_03 and ACT_04 only — both currently available. SC_08 dependency on SC_03 is met (SC_03 MASTER complete). LOC_03 (Attic) is available from 09:00. ACT_04 availability ends at 13:00 — if SC_08 is delayed further, ACT_04 may become unavailable.",
+          "expectedBenefitMinutes": 37
+        }
+      }
+    },
+    {
+      "step": 15,
+      "time": "10:14",
+      "eventType": "SCHEDULE_PROPOSAL_APPROVED",
+      "originType": "HUMAN",
+      "originId": "production_manager",
+      "source": "production_manager",
+      "payload": {
+        "proposalId": "PROPOSAL_001",
+        "approvedBy": "production_manager",
+        "note": "Approved. Moving SC_08 forward."
+      },
+      "description": "Production Manager approves the schedule proposal. Schedule updates."
+    },
+    {
+      "step": 16,
+      "time": "10:18",
+      "eventType": "SHOT_STARTED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_18", "sceneId": "SC_08" },
+      "description": "SC_08 begins. SC08_MASTER."
+    },
+    {
+      "step": 17,
+      "time": "10:36",
+      "eventType": "SHOT_COMPLETED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_18", "sceneId": "SC_08", "actualDurationMinutes": 18 },
+      "description": "SC08_MASTER completed."
+    },
+    {
+      "step": 18,
+      "time": "10:40",
+      "eventType": "SHOT_STARTED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_19", "sceneId": "SC_08" },
+      "description": "SC08_CU_YOUNG."
+    },
+    {
+      "step": 19,
+      "time": "10:53",
+      "eventType": "SHOT_COMPLETED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_19", "sceneId": "SC_08", "actualDurationMinutes": 13 },
+      "description": "SC08_CU_YOUNG completed.",
+      "expectedAgentResponse": {
+        "agent": "COVERAGE_AGENT",
+        "analysis": "SC_08 has 4 planned shots: SH_18, SH_19, SH_20, SH_21. Completed: SH_18, SH_19. Missing: SH_20 (SC08_CU_ELENA, ACT_04 required), SH_21 (SC08_INSERT_PHOTO). ACT_04 available until 13:00 only. Risk: if SC_08 coverage not completed before 13:00, SH_20 becomes unshootable today.",
+        "alert": "COVERAGE_ALERT on SC_08: missing SH_20 and SH_21. ACT_04 deadline 13:00."
+      }
+    },
+    {
+      "step": 20,
+      "time": "10:57",
+      "eventType": "ACTOR_AVAILABLE",
+      "originType": "HUMAN",
+      "originId": "production_manager",
+      "source": "production_manager",
+      "payload": {
+        "actorId": "ACT_02",
+        "actorName": "Maya Reed",
+        "resolvedAt": "10:57"
+      },
+      "description": "Maya Reed has arrived on set. Delay resolved."
+    },
+    {
+      "step": 21,
+      "time": "11:00",
+      "eventType": "SHOT_STARTED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_20", "sceneId": "SC_08" },
+      "description": "SC08_CU_ELENA — Sona Varga. Completing SC_08 coverage before 13:00 deadline."
+    },
+    {
+      "step": 22,
+      "time": "11:13",
+      "eventType": "SHOT_COMPLETED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_20", "sceneId": "SC_08", "actualDurationMinutes": 13 },
+      "description": "SC08_CU_ELENA completed."
+    },
+    {
+      "step": 23,
+      "time": "11:17",
+      "eventType": "SHOT_STARTED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_21", "sceneId": "SC_08" },
+      "description": "SC08_INSERT_PHOTO."
+    },
+    {
+      "step": 24,
+      "time": "11:25",
+      "eventType": "SHOT_COMPLETED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_21", "sceneId": "SC_08", "actualDurationMinutes": 8 },
+      "description": "SC08_INSERT_PHOTO completed. SC_08 fully covered. Coverage alert can be resolved."
+    },
+    {
+      "step": 25,
+      "time": "11:28",
+      "eventType": "CONTINUITY_FACT_RECORDED",
+      "originType": "HUMAN",
+      "originId": "script_supervisor",
+      "source": "script_supervisor",
+      "payload": {
+        "factId": "CFACT_01",
+        "sceneId": "SC_05",
+        "shotId": "SC05_OTS_MAYA",
+        "characterId": "ACT_02",
+        "propId": "PROP_02",
+        "attribute": "notebook_hand",
+        "value": "LEFT",
+        "source": "CREW_REPORT",
+        "notes": "Confirmed by script supervisor for SC_05 coverage notes."
+      },
+      "description": "Script supervisor records continuity fact: notebook in LEFT hand for SC05_OTS_MAYA."
+    },
+    {
+      "step": 26,
+      "time": "11:30",
+      "eventType": "CONTINUITY_FACT_RECORDED",
+      "originType": "HUMAN",
+      "originId": "script_supervisor",
+      "source": "script_supervisor",
+      "payload": {
+        "factId": "CFACT_02",
+        "sceneId": "SC_06",
+        "shotId": "SC06_ECU_NOTEBOOK",
+        "characterId": null,
+        "propId": "PROP_02",
+        "attribute": "notebook_position",
+        "value": "RIGHT_SIDE_OF_CRATE",
+        "source": "SCRIPT",
+        "notes": "From script: notebook sits on right side of crate in SC_06."
+      },
+      "description": "Script supervisor records: notebook on RIGHT side of crate in SC_06.",
+      "expectedAgentResponse": {
+        "agent": "CONTINUITY_AGENT",
+        "analysis": "CFACT_01 (SC_05): notebook in ACT_02's LEFT hand. CFACT_02 (SC_06): notebook on RIGHT side of crate. If these scenes are in continuity, the notebook transitions from left hand to right side of crate without explanation. This is an INFERENCE — possible story justification exists but should be flagged.",
+        "alert": {
+          "alertType": "INFERENCE",
+          "severity": "MEDIUM",
+          "description": "Potential continuity issue: notebook position between SC_05 and SC_06. In SC_05 (SC05_OTS_MAYA), Elara holds the notebook in her LEFT hand. In SC_06 (SC06_ECU_NOTEBOOK), the notebook is on the RIGHT side of the crate. If these scenes are in direct continuity, the transition is unexplained. Review before editing."
+        }
+      }
+    },
+    {
+      "step": 27,
+      "time": "12:00",
+      "eventType": "SHOT_STARTED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_07", "sceneId": "SC_03" },
+      "description": "Back to SC_03. SC03_CU_THOMAS."
+    },
+    {
+      "step": 28,
+      "time": "12:12",
+      "eventType": "SHOT_COMPLETED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_07", "sceneId": "SC_03", "actualDurationMinutes": 12 },
+      "description": "SC03_CU_THOMAS completed. SC_03 fully covered."
+    },
+    {
+      "step": 29,
+      "time": "12:18",
+      "eventType": "SHOT_STARTED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_08", "sceneId": "SC_04" },
+      "description": "SC_04 — Garden Chase. SC04_MASTER."
+    },
+    {
+      "step": 30,
+      "time": "12:38",
+      "eventType": "SHOT_COMPLETED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_08", "sceneId": "SC_04", "actualDurationMinutes": 20 },
+      "description": "SC04_MASTER completed."
+    },
+    {
+      "step": 31,
+      "time": "12:42",
+      "eventType": "SHOT_STARTED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_09", "sceneId": "SC_04" },
+      "description": "SC04_CU_MAYA."
+    },
+    {
+      "step": 32,
+      "time": "12:52",
+      "eventType": "SHOT_COMPLETED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_09", "sceneId": "SC_04", "actualDurationMinutes": 10 },
+      "description": "SC04_CU_MAYA completed."
+    },
+    {
+      "step": 33,
+      "time": "12:56",
+      "eventType": "SHOT_STARTED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_10", "sceneId": "SC_04" },
+      "description": "SC04_CU_THOMAS."
+    },
+    {
+      "step": 34,
+      "time": "13:06",
+      "eventType": "SHOT_COMPLETED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_10", "sceneId": "SC_04", "actualDurationMinutes": 10 },
+      "description": "SC04_CU_THOMAS completed. SC_04 fully covered."
+    },
+    {
+      "step": 35,
+      "time": "13:15",
+      "eventType": "SHOT_STARTED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_11", "sceneId": "SC_05" },
+      "description": "SC_05 — Confrontation. SC05_MASTER."
+    },
+    {
+      "step": 36,
+      "time": "13:37",
+      "eventType": "SHOT_COMPLETED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_11", "sceneId": "SC_05", "actualDurationMinutes": 22 },
+      "description": "SC05_MASTER completed."
+    },
+    {
+      "step": 37,
+      "time": "13:42",
+      "eventType": "SHOT_STARTED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_12", "sceneId": "SC_05" },
+      "description": "SC05_OTS_MAYA."
+    },
+    {
+      "step": 38,
+      "time": "13:56",
+      "eventType": "SHOT_COMPLETED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_12", "sceneId": "SC_05", "actualDurationMinutes": 14 },
+      "description": "SC05_OTS_MAYA completed."
+    },
+    {
+      "step": 39,
+      "time": "14:00",
+      "eventType": "SHOT_STARTED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_13", "sceneId": "SC_05" },
+      "description": "SC05_OTS_THOMAS."
+    },
+    {
+      "step": 40,
+      "time": "14:14",
+      "eventType": "SHOT_COMPLETED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_13", "sceneId": "SC_05", "actualDurationMinutes": 14 },
+      "description": "SC05_OTS_THOMAS completed. SC_05 fully covered."
+    },
+    {
+      "step": 41,
+      "time": "14:20",
+      "eventType": "SHOT_STARTED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_14", "sceneId": "SC_06" },
+      "description": "SC_06 — Attic Discovery. SC06_MASTER."
+    },
+    {
+      "step": 42,
+      "time": "14:38",
+      "eventType": "SHOT_COMPLETED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_14", "sceneId": "SC_06", "actualDurationMinutes": 18 },
+      "description": "SC06_MASTER completed."
+    },
+    {
+      "step": 43,
+      "time": "14:42",
+      "eventType": "SHOT_STARTED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_15", "sceneId": "SC_06" },
+      "description": "SC06_ECU_NOTEBOOK — key continuity shot."
+    },
+    {
+      "step": 44,
+      "time": "14:50",
+      "eventType": "SHOT_COMPLETED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_15", "sceneId": "SC_06", "actualDurationMinutes": 8 },
+      "description": "SC06_ECU_NOTEBOOK completed. SC_06 fully covered."
+    },
+    {
+      "step": 45,
+      "time": "14:55",
+      "eventType": "SHOT_STARTED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_16", "sceneId": "SC_07" },
+      "description": "SC_07 — The Photograph. SC07_MASTER."
+    },
+    {
+      "step": 46,
+      "time": "15:13",
+      "eventType": "SHOT_COMPLETED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_16", "sceneId": "SC_07", "actualDurationMinutes": 18 },
+      "description": "SC07_MASTER completed."
+    },
+    {
+      "step": 47,
+      "time": "15:17",
+      "eventType": "SHOT_STARTED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_17", "sceneId": "SC_07" },
+      "description": "SC07_INSERT_PHOTO."
+    },
+    {
+      "step": 48,
+      "time": "15:25",
+      "eventType": "SHOT_COMPLETED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_17", "sceneId": "SC_07", "actualDurationMinutes": 8 },
+      "description": "SC07_INSERT_PHOTO completed. SC_07 fully covered."
+    },
+    {
+      "step": 49,
+      "time": "15:32",
+      "eventType": "SHOT_STARTED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_22", "sceneId": "SC_09" },
+      "description": "SC_09 — Farewell Garden. SC09_MASTER."
+    },
+    {
+      "step": 50,
+      "time": "15:50",
+      "eventType": "SHOT_COMPLETED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_22", "sceneId": "SC_09", "actualDurationMinutes": 18 },
+      "description": "SC09_MASTER completed."
+    },
+    {
+      "step": 51,
+      "time": "15:54",
+      "eventType": "SHOT_STARTED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_23", "sceneId": "SC_09" },
+      "description": "SC09_TWO_SHOT."
+    },
+    {
+      "step": 52,
+      "time": "16:06",
+      "eventType": "SHOT_COMPLETED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_23", "sceneId": "SC_09", "actualDurationMinutes": 12 },
+      "description": "SC09_TWO_SHOT completed. SC_09 fully covered."
+    },
+    {
+      "step": 53,
+      "time": "16:12",
+      "eventType": "SHOT_STARTED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_24", "sceneId": "SC_10" },
+      "description": "SC_10 — Last Light. SC10_MASTER."
+    },
+    {
+      "step": 54,
+      "time": "16:26",
+      "eventType": "SHOT_COMPLETED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_24", "sceneId": "SC_10", "actualDurationMinutes": 14 },
+      "description": "SC10_MASTER completed."
+    },
+    {
+      "step": 55,
+      "time": "16:30",
+      "eventType": "SHOT_STARTED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_25", "sceneId": "SC_10" },
+      "description": "SC10_CU_THOMAS — final shot of the day."
+    },
+    {
+      "step": 56,
+      "time": "16:42",
+      "eventType": "SHOT_COMPLETED",
+      "originType": "HUMAN",
+      "originId": "first_ad",
+      "source": "first_ad",
+      "payload": { "shotId": "SH_25", "sceneId": "SC_10", "actualDurationMinutes": 12 },
+      "description": "SC10_CU_THOMAS completed. SC_10 fully covered. All principal photography for Day 1 complete."
+    },
+    {
+      "step": 57,
+      "time": "17:00",
+      "eventType": "SHOOT_DAY_WRAPPED",
+      "originType": "HUMAN",
+      "originId": "production_manager",
+      "source": "production_manager",
+      "payload": {
+        "shootDayId": "DAY_001",
+        "wrappedBy": "production_manager"
+      },
+      "description": "Production Manager wraps the day. Wrap Report generated from actual state."
+    }
+  ],
+
+  "expectedWrapReport": {
+    "note": "These values are calculated from actual event state — not hardcoded. This section shows expected values for test validation only.",
+    "plannedShotCount": 25,
+    "completedShotCount": 25,
+    "failedShotCount": 0,
+    "skippedShotCount": 0,
+    "plannedSceneCount": 10,
+    "completedSceneCount": 10,
+    "partialSceneCount": 0,
+    "totalDelayMinutes": 45,
+    "approvedScheduleChanges": 1,
+    "estimatedMinutesRecovered": 37,
+    "continuityAlertsCreated": 1,
+    "coverageAlertsCreated": 1,
+    "coverageAlertsResolved": 1,
+    "activeRisksAtWrap": 0
+  }
+}

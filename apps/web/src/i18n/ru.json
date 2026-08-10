@@ -1,0 +1,196 @@
+{
+  "nav": {
+    "dashboard": "Панель управления",
+    "timeline": "Хроника событий",
+    "sceneBoard": "Сцены",
+    "coverage": "Покрытие кадров",
+    "continuity": "Непрерывность",
+    "schedule": "Управление расписанием",
+    "report": "Итоговый отчёт"
+  },
+  "devMode": {
+    "banner": "РЕЖИМ РАЗРАБОТКИ — ИИ НЕ ПОДКЛЮЧЁН",
+    "description": "Этап 1: детерминированные агенты. Интеграция Gemini + Agent Builder — Этап 2.",
+    "agentMode": "Режим агентов",
+    "aiStatus": "Статус ИИ",
+    "partnerStatus": "Интеграция партнёра"
+  },
+  "partnerIntegration": {
+    "notConfigured": "НЕ НАСТРОЕНО",
+    "notConnected": "НЕ ПОДКЛЮЧЕНО",
+    "connected": "ПОДКЛЮЧЕНО",
+    "label": "Интеграция партнёра"
+  },
+  "status": {
+    "planned": "Запланировано",
+    "ready": "Готово",
+    "inProgress": "В процессе",
+    "partial": "Частично",
+    "complete": "Завершено",
+    "blocked": "Заблокировано"
+  },
+  "actorStatus": {
+    "available": "Доступен",
+    "delayed": "Задержан",
+    "unavailable": "Недоступен",
+    "wrapped": "Освобождён"
+  },
+  "locationStatus": {
+    "available": "Доступна",
+    "warning": "Предупреждение",
+    "unavailable": "Недоступна"
+  },
+  "shotStatus": {
+    "planned": "Запланировано",
+    "inProgress": "В процессе",
+    "complete": "Снято",
+    "failed": "Не удалось",
+    "skipped": "Пропущено"
+  },
+  "alertStatus": {
+    "open": "Открыто",
+    "underReview": "На рассмотрении",
+    "resolved": "Решено",
+    "overridden": "Переопределено"
+  },
+  "alertType": {
+    "fact": "ФАКТ",
+    "inference": "ВЫВОД",
+    "recommendation": "РЕКОМЕНДАЦИЯ"
+  },
+  "severity": {
+    "low": "Низкий",
+    "medium": "Средний",
+    "high": "Высокий",
+    "critical": "Критический"
+  },
+  "proposal": {
+    "pending": "Ожидает",
+    "approved": "Одобрено",
+    "rejected": "Отклонено",
+    "approve": "Одобрить",
+    "reject": "Отклонить",
+    "explain": "Объяснить",
+    "why": "Причина",
+    "evidence": "Доказательства",
+    "expectedBenefit": "Ожидаемая выгода",
+    "expectedBenefitMinutes": "восстановление ~{minutes} мин",
+    "affectedScenes": "Затронутые сцены",
+    "risks": "Риски",
+    "confidence": "Уверенность",
+    "noProposals": "Нет ожидающих предложений",
+    "approveConfirm": "Одобрить это изменение расписания?",
+    "rejectConfirm": "Отклонить это изменение расписания?"
+  },
+  "dashboard": {
+    "title": "Панель управления производством",
+    "shootDay": "Съёмочный день",
+    "scenesPlanned": "Сцен запланировано",
+    "scenesCompleted": "Сцен завершено",
+    "shotsPlanned": "Кадров запланировано",
+    "shotsCompleted": "Кадров снято",
+    "atRisk": "Под угрозой",
+    "continuityAlerts": "Предупреждения непрерывности",
+    "coverageAlerts": "Предупреждения покрытия",
+    "scheduleDelay": "Задержка",
+    "estimatedRecovered": "Восстановлено",
+    "activeProposals": "Активные предложения",
+    "minutes": "{count} мин",
+    "noActiveDay": "Нет активного съёмочного дня"
+  },
+  "sceneBoard": {
+    "title": "Доска сцен",
+    "scene": "Сцена",
+    "location": "Локация",
+    "characters": "Персонажи",
+    "shots": "Кадры",
+    "dependencies": "Зависимости",
+    "noScenes": "Сцены не загружены"
+  },
+  "coverage": {
+    "title": "Покрытие кадров",
+    "planned": "Запланировано",
+    "completed": "Снято",
+    "missing": "Отсутствует",
+    "coveragePercent": "Покрытие {percent}%",
+    "noAlerts": "Нет предупреждений о покрытии",
+    "allCovered": "Все кадры сняты"
+  },
+  "continuity": {
+    "title": "Доска непрерывности",
+    "facts": "Факты непрерывности",
+    "alerts": "Предупреждения непрерывности",
+    "attribute": "Атрибут",
+    "value": "Значение",
+    "scene": "Сцена",
+    "shot": "Кадр",
+    "source": "Источник",
+    "inferenceNote": "Это ВЫВОД — не подтверждённая ошибка. Проверьте перед монтажом.",
+    "resolve": "Разрешить",
+    "override": "Переопределить",
+    "noFacts": "Факты непрерывности не зафиксированы",
+    "noAlerts": "Нет предупреждений непрерывности"
+  },
+  "schedule": {
+    "title": "Управление расписанием",
+    "currentSchedule": "Текущее расписание",
+    "proposals": "Предложения по расписанию",
+    "position": "Позиция",
+    "scene": "Сцена",
+    "plannedStart": "Плановое начало",
+    "estimatedDuration": "Ожид. длительность",
+    "minutes": "{count} мин",
+    "noSchedule": "Расписание не загружено"
+  },
+  "timeline": {
+    "title": "Хроника событий",
+    "noEvents": "Событий пока нет",
+    "connecting": "Подключение к потоку событий...",
+    "connected": "Прямой эфир"
+  },
+  "report": {
+    "title": "Итоговый отчёт дня",
+    "notGenerated": "День ещё не завершён",
+    "wrap": "Завершить день",
+    "wrapConfirm": "Завершить съёмочный день? Это окончательно.",
+    "plannedShots": "Запланировано кадров",
+    "completedShots": "Снято кадров",
+    "failedShots": "Неудачных кадров",
+    "skippedShots": "Пропущено кадров",
+    "plannedScenes": "Запланировано сцен",
+    "completedScenes": "Завершено сцен",
+    "totalDelay": "Общая задержка",
+    "recovered": "Восстановлено (оценка)",
+    "openRisks": "Открытых рисков",
+    "resolvedRisks": "Разрешено рисков",
+    "continuityIssues": "Проблем непрерывности",
+    "coverageIssues": "Проблем покрытия"
+  },
+  "common": {
+    "approve": "Одобрить",
+    "reject": "Отклонить",
+    "explain": "Объяснить",
+    "resolve": "Разрешить",
+    "override": "Переопределить",
+    "loading": "Загрузка...",
+    "error": "Произошла ошибка",
+    "noData": "Данные отсутствуют",
+    "refresh": "Обновить",
+    "cancel": "Отмена",
+    "confirm": "Подтвердить",
+    "minutes": "мин",
+    "percent": "%"
+  },
+  "errors": {
+    "approvalRequired": "Для этого действия требуется подтверждение человека",
+    "toolNotFound": "Инструмент не найден",
+    "invalidState": "Недопустимый переход состояния",
+    "notFound": "Ресурс не найден",
+    "serverError": "Ошибка сервера"
+  },
+  "language": {
+    "en": "English",
+    "ru": "Русский",
+    "switchTo": "Переключить язык"
+  }
+}

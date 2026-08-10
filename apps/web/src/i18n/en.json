@@ -1,0 +1,196 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "timeline": "Live Timeline",
+    "sceneBoard": "Scene Board",
+    "coverage": "Shot Coverage",
+    "continuity": "Continuity",
+    "schedule": "Schedule Control",
+    "report": "End-of-Day Report"
+  },
+  "devMode": {
+    "banner": "DEV MODE — AI NOT CONNECTED",
+    "description": "Phase 1: Deterministic agents. Gemini + Agent Builder integration is Phase 2.",
+    "agentMode": "Agent Mode",
+    "aiStatus": "AI Status",
+    "partnerStatus": "Partner Integration"
+  },
+  "partnerIntegration": {
+    "notConfigured": "NOT CONFIGURED",
+    "notConnected": "NOT CONNECTED",
+    "connected": "CONNECTED",
+    "label": "Partner Integration"
+  },
+  "status": {
+    "planned": "Planned",
+    "ready": "Ready",
+    "inProgress": "In Progress",
+    "partial": "Partial",
+    "complete": "Complete",
+    "blocked": "Blocked"
+  },
+  "actorStatus": {
+    "available": "Available",
+    "delayed": "Delayed",
+    "unavailable": "Unavailable",
+    "wrapped": "Wrapped"
+  },
+  "locationStatus": {
+    "available": "Available",
+    "warning": "Warning",
+    "unavailable": "Unavailable"
+  },
+  "shotStatus": {
+    "planned": "Planned",
+    "inProgress": "In Progress",
+    "complete": "Complete",
+    "failed": "Failed",
+    "skipped": "Skipped"
+  },
+  "alertStatus": {
+    "open": "Open",
+    "underReview": "Under Review",
+    "resolved": "Resolved",
+    "overridden": "Overridden"
+  },
+  "alertType": {
+    "fact": "FACT",
+    "inference": "INFERENCE",
+    "recommendation": "RECOMMENDATION"
+  },
+  "severity": {
+    "low": "Low",
+    "medium": "Medium",
+    "high": "High",
+    "critical": "Critical"
+  },
+  "proposal": {
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "approve": "Approve",
+    "reject": "Reject",
+    "explain": "Explain",
+    "why": "Why",
+    "evidence": "Evidence",
+    "expectedBenefit": "Expected Benefit",
+    "expectedBenefitMinutes": "{minutes} min recovered",
+    "affectedScenes": "Affected Scenes",
+    "risks": "Risks",
+    "confidence": "Confidence",
+    "noProposals": "No pending proposals",
+    "approveConfirm": "Approve this schedule change?",
+    "rejectConfirm": "Reject this schedule change?"
+  },
+  "dashboard": {
+    "title": "Production Dashboard",
+    "shootDay": "Shoot Day",
+    "scenesPlanned": "Scenes Planned",
+    "scenesCompleted": "Scenes Completed",
+    "shotsPlanned": "Shots Planned",
+    "shotsCompleted": "Shots Completed",
+    "atRisk": "At Risk",
+    "continuityAlerts": "Continuity Alerts",
+    "coverageAlerts": "Coverage Alerts",
+    "scheduleDelay": "Delay",
+    "estimatedRecovered": "Recovered",
+    "activeProposals": "Active Proposals",
+    "minutes": "{count} min",
+    "noActiveDay": "No active shoot day"
+  },
+  "sceneBoard": {
+    "title": "Scene Board",
+    "scene": "Scene",
+    "location": "Location",
+    "characters": "Characters",
+    "shots": "Shots",
+    "dependencies": "Dependencies",
+    "noScenes": "No scenes loaded"
+  },
+  "coverage": {
+    "title": "Shot Coverage",
+    "planned": "Planned",
+    "completed": "Completed",
+    "missing": "Missing",
+    "coveragePercent": "{percent}% covered",
+    "noAlerts": "No coverage alerts",
+    "allCovered": "All shots covered"
+  },
+  "continuity": {
+    "title": "Continuity Board",
+    "facts": "Continuity Facts",
+    "alerts": "Continuity Alerts",
+    "attribute": "Attribute",
+    "value": "Value",
+    "scene": "Scene",
+    "shot": "Shot",
+    "source": "Source",
+    "inferenceNote": "This is an INFERENCE — not a confirmed error. Review before editing.",
+    "resolve": "Resolve",
+    "override": "Override",
+    "noFacts": "No continuity facts recorded",
+    "noAlerts": "No continuity alerts"
+  },
+  "schedule": {
+    "title": "Schedule Control",
+    "currentSchedule": "Current Schedule",
+    "proposals": "Schedule Proposals",
+    "position": "Position",
+    "scene": "Scene",
+    "plannedStart": "Planned Start",
+    "estimatedDuration": "Est. Duration",
+    "minutes": "{count} min",
+    "noSchedule": "No schedule loaded"
+  },
+  "timeline": {
+    "title": "Live Timeline",
+    "noEvents": "No events yet",
+    "connecting": "Connecting to event stream...",
+    "connected": "Live"
+  },
+  "report": {
+    "title": "End-of-Day Report",
+    "notGenerated": "Day has not been wrapped yet",
+    "wrap": "Wrap Day",
+    "wrapConfirm": "Wrap the shoot day? This is final.",
+    "plannedShots": "Planned Shots",
+    "completedShots": "Completed Shots",
+    "failedShots": "Failed Shots",
+    "skippedShots": "Skipped Shots",
+    "plannedScenes": "Planned Scenes",
+    "completedScenes": "Completed Scenes",
+    "totalDelay": "Total Delay",
+    "recovered": "Estimated Recovered",
+    "openRisks": "Open Risks",
+    "resolvedRisks": "Resolved Risks",
+    "continuityIssues": "Continuity Issues",
+    "coverageIssues": "Coverage Issues"
+  },
+  "common": {
+    "approve": "Approve",
+    "reject": "Reject",
+    "explain": "Explain",
+    "resolve": "Resolve",
+    "override": "Override",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "noData": "No data available",
+    "refresh": "Refresh",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "minutes": "min",
+    "percent": "%"
+  },
+  "errors": {
+    "approvalRequired": "Human approval required for this action",
+    "toolNotFound": "Tool not found",
+    "invalidState": "Invalid state transition",
+    "notFound": "Resource not found",
+    "serverError": "Server error"
+  },
+  "language": {
+    "en": "English",
+    "ru": "Русский",
+    "switchTo": "Switch language"
+  }
+}

@@ -1,0 +1,195 @@
+"""Domain enums for StudioGrid AI.
+
+Internal enum names are always English regardless of UI language.
+"""
+from enum import Enum
+
+
+class ProductionStatus(str, Enum):
+    ACTIVE = "ACTIVE"
+    WRAPPED = "WRAPPED"
+    ARCHIVED = "ARCHIVED"
+
+
+class ShootDayStatus(str, Enum):
+    PLANNED = "PLANNED"
+    ACTIVE = "ACTIVE"
+    WRAPPED = "WRAPPED"
+
+
+class SceneStatus(str, Enum):
+    PLANNED = "PLANNED"
+    READY = "READY"
+    IN_PROGRESS = "IN_PROGRESS"
+    PARTIAL = "PARTIAL"
+    COMPLETE = "COMPLETE"
+    BLOCKED = "BLOCKED"
+
+
+class ShotStatus(str, Enum):
+    PLANNED = "PLANNED"
+    IN_PROGRESS = "IN_PROGRESS"
+    COMPLETE = "COMPLETE"
+    FAILED = "FAILED"
+    SKIPPED = "SKIPPED"
+
+
+class ShotType(str, Enum):
+    MASTER = "MASTER"
+    CLOSE_UP = "CLOSE_UP"
+    INSERT = "INSERT"
+    OTS = "OTS"
+    TWO_SHOT = "TWO_SHOT"
+    ECU = "ECU"
+    WIDE = "WIDE"
+    POV = "POV"
+    CUTAWAY = "CUTAWAY"
+
+
+class ActorStatus(str, Enum):
+    AVAILABLE = "AVAILABLE"
+    DELAYED = "DELAYED"
+    UNAVAILABLE = "UNAVAILABLE"
+    WRAPPED = "WRAPPED"
+
+
+class LocationStatus(str, Enum):
+    AVAILABLE = "AVAILABLE"
+    WARNING = "WARNING"
+    UNAVAILABLE = "UNAVAILABLE"
+
+
+class LocationType(str, Enum):
+    INT = "INT"
+    EXT = "EXT"
+
+
+class PropStatus(str, Enum):
+    AVAILABLE = "AVAILABLE"
+    MISSING = "MISSING"
+    IN_USE = "IN_USE"
+
+
+class TimeOfDay(str, Enum):
+    DAY = "DAY"
+    GOLDEN_HOUR = "GOLDEN_HOUR"
+    NIGHT = "NIGHT"
+    INT = "INT"
+
+
+class DependencyType(str, Enum):
+    MUST_PRECEDE = "MUST_PRECEDE"
+    SAME_DAY = "SAME_DAY"
+    CONTINUITY_REQUIRED = "CONTINUITY_REQUIRED"
+
+
+class FactSource(str, Enum):
+    SCRIPT = "SCRIPT"
+    CREW_REPORT = "CREW_REPORT"
+    AI_INFERENCE = "AI_INFERENCE"
+
+
+class AlertType(str, Enum):
+    FACT = "FACT"
+    INFERENCE = "INFERENCE"
+    RECOMMENDATION = "RECOMMENDATION"
+
+
+class AlertStatus(str, Enum):
+    OPEN = "OPEN"
+    UNDER_REVIEW = "UNDER_REVIEW"
+    RESOLVED = "RESOLVED"
+    OVERRIDDEN = "OVERRIDDEN"
+
+
+class Severity(str, Enum):
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+    CRITICAL = "CRITICAL"
+
+
+class ProposalStatus(str, Enum):
+    PENDING = "PENDING"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+
+
+class ProposalCategory(str, Enum):
+    FACT = "FACT"
+    INFERENCE = "INFERENCE"
+    RECOMMENDATION = "RECOMMENDATION"
+
+
+class RiskStatus(str, Enum):
+    ACTIVE = "ACTIVE"
+    MONITORING = "MONITORING"
+    RESOLVED = "RESOLVED"
+    ACCEPTED = "ACCEPTED"
+
+
+class OriginType(str, Enum):
+    HUMAN = "HUMAN"
+    AGENT = "AGENT"
+    SYSTEM = "SYSTEM"
+
+
+class AgentMode(str, Enum):
+    DEV = "DEV"
+    PRODUCTION = "PRODUCTION"
+
+
+class PartnerIntegrationStatus(str, Enum):
+    NOT_CONFIGURED = "NOT_CONFIGURED"
+    NOT_CONNECTED = "NOT_CONNECTED"
+    CONNECTED = "CONNECTED"
+
+
+class EventType(str, Enum):
+    # Shoot day lifecycle
+    SHOOT_DAY_STARTED = "SHOOT_DAY_STARTED"
+    SHOOT_DAY_WRAPPED = "SHOOT_DAY_WRAPPED"
+
+    # Shot lifecycle
+    SHOT_STARTED = "SHOT_STARTED"
+    SHOT_COMPLETED = "SHOT_COMPLETED"
+    SHOT_FAILED = "SHOT_FAILED"
+    SHOT_SKIPPED = "SHOT_SKIPPED"
+
+    # Actor
+    ACTOR_DELAYED = "ACTOR_DELAYED"
+    ACTOR_AVAILABLE = "ACTOR_AVAILABLE"
+
+    # Location
+    LOCATION_WARNING = "LOCATION_WARNING"
+    LOCATION_UNAVAILABLE = "LOCATION_UNAVAILABLE"
+    LOCATION_AVAILABLE = "LOCATION_AVAILABLE"
+
+    # Props
+    PROP_UNAVAILABLE = "PROP_UNAVAILABLE"
+    PROP_AVAILABLE = "PROP_AVAILABLE"
+
+    # Continuity
+    CONTINUITY_FACT_RECORDED = "CONTINUITY_FACT_RECORDED"
+    CONTINUITY_ALERT_CREATED = "CONTINUITY_ALERT_CREATED"
+    CONTINUITY_ALERT_RESOLVED = "CONTINUITY_ALERT_RESOLVED"
+
+    # Coverage
+    COVERAGE_ALERT_CREATED = "COVERAGE_ALERT_CREATED"
+    COVERAGE_ALERT_RESOLVED = "COVERAGE_ALERT_RESOLVED"
+
+    # Schedule proposals
+    SCHEDULE_PROPOSAL_CREATED = "SCHEDULE_PROPOSAL_CREATED"
+    SCHEDULE_PROPOSAL_APPROVED = "SCHEDULE_PROPOSAL_APPROVED"
+    SCHEDULE_PROPOSAL_REJECTED = "SCHEDULE_PROPOSAL_REJECTED"
+
+    # Risks
+    RISK_CREATED = "RISK_CREATED"
+    RISK_UPDATED = "RISK_UPDATED"
+    RISK_RESOLVED = "RISK_RESOLVED"
+
+    # Tool audit
+    TOOL_CALLED = "TOOL_CALLED"
+    APPROVAL_REQUIRED = "APPROVAL_REQUIRED"
+    APPROVAL_GRANTED = "APPROVAL_GRANTED"
+    APPROVAL_DENIED = "APPROVAL_DENIED"

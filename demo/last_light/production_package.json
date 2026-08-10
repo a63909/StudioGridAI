@@ -1,0 +1,726 @@
+{
+  "productionId": "PROD_LAST_LIGHT_001",
+  "title": "LAST LIGHT",
+  "logline": "An aging photographer returns to his condemned childhood home on its final day, where he encounters a young woman living there illegally — and the ghost of his own unfinished past.",
+  "format": "Short Film",
+  "estimatedRuntime": 22,
+  "createdAt": "2025-01-01T00:00:00Z",
+
+  "actors": [
+    {
+      "actorId": "ACT_01",
+      "name": "Marcus Elland",
+      "characterName": "Thomas Hale",
+      "characterDescription": "A retired photojournalist in his late 60s. Quiet, methodical. Carries an old Leica camera everywhere.",
+      "availableFromTime": "07:00",
+      "availableUntilTime": "19:00",
+      "currentStatus": "AVAILABLE",
+      "delayMinutes": 0
+    },
+    {
+      "actorId": "ACT_02",
+      "name": "Maya Reed",
+      "characterName": "Elara",
+      "characterDescription": "A young woman in her mid-20s, living in the abandoned house without permission. Guarded but curious.",
+      "availableFromTime": "09:00",
+      "availableUntilTime": "17:00",
+      "currentStatus": "AVAILABLE",
+      "delayMinutes": 0
+    },
+    {
+      "actorId": "ACT_03",
+      "name": "Daniel Osei",
+      "characterName": "Young Thomas",
+      "characterDescription": "Thomas Hale as a teenager, seen only in memory sequences. Energy and hope not yet worn down.",
+      "availableFromTime": "08:00",
+      "availableUntilTime": "14:00",
+      "currentStatus": "AVAILABLE",
+      "delayMinutes": 0
+    },
+    {
+      "actorId": "ACT_04",
+      "name": "Sona Varga",
+      "characterName": "Elena Hale",
+      "characterDescription": "Thomas's mother. Appears only as a presence — heard, glimpsed, never fully seen. Voice-over and shadow work.",
+      "availableFromTime": "10:00",
+      "availableUntilTime": "13:00",
+      "currentStatus": "AVAILABLE",
+      "delayMinutes": 0
+    }
+  ],
+
+  "locations": [
+    {
+      "locationId": "LOC_01",
+      "name": "Hale House — Main Room",
+      "locationType": "INT",
+      "availableFromTime": "07:00",
+      "availableUntilTime": "20:00",
+      "daylightConstraint": false,
+      "daylightDeadlineTime": null,
+      "status": "AVAILABLE",
+      "notes": "Ground floor. Large windows face west. Fireplace. Dust-covered furniture."
+    },
+    {
+      "locationId": "LOC_02",
+      "name": "Hale House — Garden",
+      "locationType": "EXT",
+      "availableFromTime": "08:00",
+      "availableUntilTime": "18:00",
+      "daylightConstraint": true,
+      "daylightDeadlineTime": "17:00",
+      "status": "AVAILABLE",
+      "notes": "Overgrown garden. Stone path. Old oak tree. Natural light only — no artificial lighting rig available. Must wrap by 17:00 for acceptable daylight."
+    },
+    {
+      "locationId": "LOC_03",
+      "name": "Hale House — Attic",
+      "locationType": "INT",
+      "availableFromTime": "09:00",
+      "availableUntilTime": "16:00",
+      "daylightConstraint": false,
+      "daylightDeadlineTime": null,
+      "status": "AVAILABLE",
+      "notes": "Accessible via narrow staircase. Low ceiling. Small skylight. No power — battery-powered lights only. Available from 09:00 due to safety inspection requirement."
+    }
+  ],
+
+  "props": [
+    {
+      "propId": "PROP_01",
+      "name": "Leica M3 Camera (vintage, worn)",
+      "status": "AVAILABLE",
+      "requiredInScenes": ["SC_01", "SC_07", "SC_10"],
+      "notes": "Thomas carries this in every exterior scene. Must be consistent — same strap position."
+    },
+    {
+      "propId": "PROP_02",
+      "name": "Worn Notebook (brown leather cover)",
+      "status": "AVAILABLE",
+      "requiredInScenes": ["SC_05", "SC_06", "SC_08"],
+      "notes": "KEY CONTINUITY PROP. Elara's notebook. Track which hand it appears in at all times."
+    },
+    {
+      "propId": "PROP_03",
+      "name": "Family Photograph (black and white, cracked frame)",
+      "status": "AVAILABLE",
+      "requiredInScenes": ["SC_07", "SC_08"],
+      "notes": "Shows young Thomas with his mother. Frame has specific crack on lower right corner."
+    },
+    {
+      "propId": "PROP_04",
+      "name": "Lantern (old oil lantern, functional)",
+      "status": "AVAILABLE",
+      "requiredInScenes": ["SC_06", "SC_08"],
+      "notes": "Used by Elara in the attic. Must be lit for SC_06. Unlit for SC_08."
+    },
+    {
+      "propId": "PROP_05",
+      "name": "Red Scarf (Elara's)",
+      "status": "AVAILABLE",
+      "requiredInScenes": ["SC_04", "SC_05", "SC_09"],
+      "notes": "KEY CONTINUITY PROP. Elara wears this in all outdoor/confrontation scenes. Must be draped over LEFT shoulder in SC_04 and SC_05."
+    }
+  ],
+
+  "scenes": [
+    {
+      "sceneId": "SC_01",
+      "sceneNumber": "1",
+      "title": "Arrival",
+      "description": "Thomas arrives at the gate of Hale House. He stands at the rusted iron gate, camera in hand, looking at the house for the first time in forty years. A demolition notice is nailed to the post.",
+      "status": "PLANNED",
+      "locationId": "LOC_02",
+      "timeOfDay": "DAY",
+      "characterIds": ["ACT_01"],
+      "propIds": ["PROP_01"],
+      "wardrobeNotes": [
+        {
+          "item": "Grey coat",
+          "description": "Thomas wears a heavy grey coat, collar up. Coat is buttoned.",
+          "characterId": "ACT_01"
+        }
+      ],
+      "estimatedDurationMinutes": 35,
+      "dependencies": [],
+      "continuityFacts": []
+    },
+    {
+      "sceneId": "SC_02",
+      "sceneNumber": "2",
+      "title": "First Room",
+      "description": "Thomas enters the main room. He moves through the dust and covered furniture. He touches a wall, stops at a window. Memory begins to surface.",
+      "status": "PLANNED",
+      "locationId": "LOC_01",
+      "timeOfDay": "INT",
+      "characterIds": ["ACT_01"],
+      "propIds": [],
+      "wardrobeNotes": [
+        {
+          "item": "Grey coat",
+          "description": "Coat now open, not buttoned. Continuity from SC_01.",
+          "characterId": "ACT_01"
+        }
+      ],
+      "estimatedDurationMinutes": 30,
+      "dependencies": [
+        {
+          "dependencyId": "DEP_01",
+          "sceneId": "SC_02",
+          "dependsOnSceneId": "SC_01",
+          "type": "MUST_PRECEDE",
+          "reason": "SC_01 establishes Thomas's arrival. SC_02 is his entry into the house — cannot precede arrival."
+        }
+      ],
+      "continuityFacts": []
+    },
+    {
+      "sceneId": "SC_03",
+      "sceneNumber": "3",
+      "title": "Memory Flood",
+      "description": "Thomas stands in the main room. The room flickers — present and past overlap. Young Thomas runs through the same space. A memory sequence.",
+      "status": "PLANNED",
+      "locationId": "LOC_01",
+      "timeOfDay": "INT",
+      "characterIds": ["ACT_01", "ACT_03"],
+      "propIds": [],
+      "wardrobeNotes": [
+        {
+          "item": "Grey coat",
+          "description": "Thomas: coat open as in SC_02.",
+          "characterId": "ACT_01"
+        },
+        {
+          "item": "School clothes (period)",
+          "description": "Young Thomas: dark trousers, white shirt, sleeves rolled up.",
+          "characterId": "ACT_03"
+        }
+      ],
+      "estimatedDurationMinutes": 40,
+      "dependencies": [
+        {
+          "dependencyId": "DEP_02",
+          "sceneId": "SC_03",
+          "dependsOnSceneId": "SC_02",
+          "type": "MUST_PRECEDE",
+          "reason": "Memory sequence triggered by Thomas's exploration in SC_02."
+        }
+      ],
+      "continuityFacts": []
+    },
+    {
+      "sceneId": "SC_04",
+      "sceneNumber": "4",
+      "title": "Garden Chase",
+      "description": "Thomas hears a sound from the garden. He finds Elara attempting to slip away through the overgrown garden. She stops when she sees him. First encounter — wary, neither hostile.",
+      "status": "PLANNED",
+      "locationId": "LOC_02",
+      "timeOfDay": "DAY",
+      "characterIds": ["ACT_01", "ACT_02"],
+      "propIds": ["PROP_01", "PROP_05"],
+      "wardrobeNotes": [
+        {
+          "item": "Grey coat",
+          "description": "Thomas: coat open.",
+          "characterId": "ACT_01"
+        },
+        {
+          "item": "Red scarf",
+          "description": "Elara: red scarf draped over LEFT shoulder. This must be consistent into SC_05.",
+          "characterId": "ACT_02"
+        }
+      ],
+      "estimatedDurationMinutes": 45,
+      "dependencies": [
+        {
+          "dependencyId": "DEP_03",
+          "sceneId": "SC_04",
+          "dependsOnSceneId": "SC_01",
+          "type": "MUST_PRECEDE",
+          "reason": "Thomas must have arrived (SC_01) before encountering Elara in the garden."
+        }
+      ],
+      "continuityFacts": []
+    },
+    {
+      "sceneId": "SC_05",
+      "sceneNumber": "5",
+      "title": "Confrontation",
+      "description": "Inside the main room. Thomas asks why Elara is here. She tells him it's the only safe place she has. He asks her to leave. She refuses. They reach a fragile truce. Elara holds her notebook throughout.",
+      "status": "PLANNED",
+      "locationId": "LOC_01",
+      "timeOfDay": "INT",
+      "characterIds": ["ACT_01", "ACT_02"],
+      "propIds": ["PROP_02", "PROP_05"],
+      "wardrobeNotes": [
+        {
+          "item": "Red scarf",
+          "description": "Elara: red scarf still over LEFT shoulder. Continuity from SC_04.",
+          "characterId": "ACT_02"
+        }
+      ],
+      "estimatedDurationMinutes": 50,
+      "dependencies": [
+        {
+          "dependencyId": "DEP_04",
+          "sceneId": "SC_05",
+          "dependsOnSceneId": "SC_02",
+          "type": "MUST_PRECEDE",
+          "reason": "Thomas must have entered the house (SC_02) before the indoor confrontation."
+        },
+        {
+          "dependencyId": "DEP_05",
+          "sceneId": "SC_05",
+          "dependsOnSceneId": "SC_04",
+          "type": "MUST_PRECEDE",
+          "reason": "The confrontation follows the garden encounter — SC_04 must precede SC_05."
+        }
+      ],
+      "continuityFacts": [
+        {
+          "factId": "CFACT_01",
+          "sceneId": "SC_05",
+          "shotId": "SC05_OTS_MAYA",
+          "characterId": "ACT_02",
+          "propId": "PROP_02",
+          "attribute": "notebook_hand",
+          "value": "LEFT",
+          "recordedAt": "2025-01-01T00:00:00Z",
+          "source": "SCRIPT"
+        }
+      ]
+    },
+    {
+      "sceneId": "SC_06",
+      "sceneNumber": "6",
+      "title": "Attic Discovery",
+      "description": "Elara takes Thomas to the attic — her living space. Lantern lit. The notebook is on the right side of a wooden crate she uses as a table. She has photographs pinned to the rafters.",
+      "status": "PLANNED",
+      "locationId": "LOC_03",
+      "timeOfDay": "INT",
+      "characterIds": ["ACT_02"],
+      "propIds": ["PROP_02", "PROP_04"],
+      "wardrobeNotes": [],
+      "estimatedDurationMinutes": 35,
+      "dependencies": [
+        {
+          "dependencyId": "DEP_06",
+          "sceneId": "SC_06",
+          "dependsOnSceneId": "SC_05",
+          "type": "MUST_PRECEDE",
+          "reason": "The attic visit follows the truce established in SC_05."
+        }
+      ],
+      "continuityFacts": [
+        {
+          "factId": "CFACT_02",
+          "sceneId": "SC_06",
+          "shotId": "SC06_ECU_NOTEBOOK",
+          "characterId": null,
+          "propId": "PROP_02",
+          "attribute": "notebook_position",
+          "value": "RIGHT_SIDE_OF_CRATE",
+          "recordedAt": "2025-01-01T00:00:00Z",
+          "source": "SCRIPT"
+        }
+      ]
+    },
+    {
+      "sceneId": "SC_07",
+      "sceneNumber": "7",
+      "title": "The Photograph",
+      "description": "Thomas finds a framed photograph he had forgotten. The family photograph. He and Elara look at it together in silence. A moment of unexpected connection.",
+      "status": "PLANNED",
+      "locationId": "LOC_01",
+      "timeOfDay": "INT",
+      "characterIds": ["ACT_01", "ACT_02"],
+      "propIds": ["PROP_01", "PROP_03"],
+      "wardrobeNotes": [],
+      "estimatedDurationMinutes": 30,
+      "dependencies": [
+        {
+          "dependencyId": "DEP_07",
+          "sceneId": "SC_07",
+          "dependsOnSceneId": "SC_06",
+          "type": "MUST_PRECEDE",
+          "reason": "The emotional openness in SC_07 follows the attic visit in SC_06."
+        }
+      ],
+      "continuityFacts": []
+    },
+    {
+      "sceneId": "SC_08",
+      "sceneNumber": "8",
+      "title": "Young Memory",
+      "description": "A memory sequence in the attic. Young Thomas sits in the attic with his mother Elena. She reads to him. The same notebook — or one just like it — lies on a crate. The lantern (unlit) is in the corner.",
+      "status": "PLANNED",
+      "locationId": "LOC_03",
+      "timeOfDay": "INT",
+      "characterIds": ["ACT_03", "ACT_04"],
+      "propIds": ["PROP_02", "PROP_03", "PROP_04"],
+      "wardrobeNotes": [
+        {
+          "item": "School clothes (period)",
+          "description": "Young Thomas: same as SC_03.",
+          "characterId": "ACT_03"
+        }
+      ],
+      "estimatedDurationMinutes": 40,
+      "dependencies": [
+        {
+          "dependencyId": "DEP_08",
+          "sceneId": "SC_08",
+          "dependsOnSceneId": "SC_03",
+          "type": "CONTINUITY_REQUIRED",
+          "reason": "SC_08 is a deeper memory triggered by SC_03. Continuity of Young Thomas wardrobe required."
+        }
+      ],
+      "continuityFacts": []
+    },
+    {
+      "sceneId": "SC_09",
+      "sceneNumber": "9",
+      "title": "Farewell Garden",
+      "description": "Thomas and Elara in the garden as the afternoon light fades. They agree — he will not report her. She will find somewhere else. They part without sentiment.",
+      "status": "PLANNED",
+      "locationId": "LOC_02",
+      "timeOfDay": "GOLDEN_HOUR",
+      "characterIds": ["ACT_01", "ACT_02"],
+      "propIds": ["PROP_01", "PROP_05"],
+      "wardrobeNotes": [],
+      "estimatedDurationMinutes": 30,
+      "dependencies": [
+        {
+          "dependencyId": "DEP_09",
+          "sceneId": "SC_09",
+          "dependsOnSceneId": "SC_07",
+          "type": "MUST_PRECEDE",
+          "reason": "The farewell follows the emotional resolution in SC_07."
+        }
+      ],
+      "continuityFacts": []
+    },
+    {
+      "sceneId": "SC_10",
+      "sceneNumber": "10",
+      "title": "Last Light",
+      "description": "Thomas alone in the garden. He raises his camera and takes one photograph of the house. He lowers the camera. He walks away without looking back.",
+      "status": "PLANNED",
+      "locationId": "LOC_02",
+      "timeOfDay": "GOLDEN_HOUR",
+      "characterIds": ["ACT_01"],
+      "propIds": ["PROP_01"],
+      "wardrobeNotes": [],
+      "estimatedDurationMinutes": 20,
+      "dependencies": [
+        {
+          "dependencyId": "DEP_10",
+          "sceneId": "SC_10",
+          "dependsOnSceneId": "SC_09",
+          "type": "MUST_PRECEDE",
+          "reason": "SC_10 is the final image of the film. Must follow all preceding action."
+        }
+      ],
+      "continuityFacts": []
+    }
+  ],
+
+  "shots": [
+    {
+      "shotId": "SH_01",
+      "sceneId": "SC_01",
+      "shotCode": "SC01_MASTER",
+      "shotType": "MASTER",
+      "description": "Wide shot. Thomas approaches the gate. Full figure. Establishes the scale of the house and the emptiness of the property.",
+      "status": "PLANNED",
+      "characterId": "ACT_01",
+      "plannedDurationMinutes": 15
+    },
+    {
+      "shotId": "SH_02",
+      "sceneId": "SC_01",
+      "shotCode": "SC01_CU_THOMAS",
+      "shotType": "CLOSE_UP",
+      "description": "Close-up on Thomas's face as he reads the demolition notice. Eyes move left-to-right, jaw tightens.",
+      "status": "PLANNED",
+      "characterId": "ACT_01",
+      "plannedDurationMinutes": 10
+    },
+    {
+      "shotId": "SH_03",
+      "sceneId": "SC_01",
+      "shotCode": "SC01_INSERT_NOTICE",
+      "shotType": "INSERT",
+      "description": "Insert: the demolition notice. Typed text, official seal, demolition date clearly visible.",
+      "status": "PLANNED",
+      "characterId": null,
+      "plannedDurationMinutes": 8
+    },
+    {
+      "shotId": "SH_04",
+      "sceneId": "SC_02",
+      "shotCode": "SC02_MASTER",
+      "shotType": "MASTER",
+      "description": "Master shot. Thomas moves through the main room from door to window. Full movement captured.",
+      "status": "PLANNED",
+      "characterId": "ACT_01",
+      "plannedDurationMinutes": 15
+    },
+    {
+      "shotId": "SH_05",
+      "sceneId": "SC_02",
+      "shotCode": "SC02_CU_HAND",
+      "shotType": "CLOSE_UP",
+      "description": "Close-up: Thomas's hand trailing along the dusty wall. Fingers draw a line through the dust.",
+      "status": "PLANNED",
+      "characterId": "ACT_01",
+      "plannedDurationMinutes": 8
+    },
+    {
+      "shotId": "SH_06",
+      "sceneId": "SC_03",
+      "shotCode": "SC03_MASTER",
+      "shotType": "MASTER",
+      "description": "Master: present Thomas stands still. In the background, Young Thomas runs through the same space. Double exposure or post effect.",
+      "status": "PLANNED",
+      "characterId": "ACT_01",
+      "plannedDurationMinutes": 18
+    },
+    {
+      "shotId": "SH_07",
+      "sceneId": "SC_03",
+      "shotCode": "SC03_CU_THOMAS",
+      "shotType": "CLOSE_UP",
+      "description": "Close-up: present Thomas watching the memory play out. Expression: not sadness, not joy. Something unresolved.",
+      "status": "PLANNED",
+      "characterId": "ACT_01",
+      "plannedDurationMinutes": 10
+    },
+    {
+      "shotId": "SH_08",
+      "sceneId": "SC_04",
+      "shotCode": "SC04_MASTER",
+      "shotType": "MASTER",
+      "description": "Master wide: both figures in the garden. Overgrowth between them. Neither moves toward the other.",
+      "status": "PLANNED",
+      "characterId": null,
+      "plannedDurationMinutes": 18
+    },
+    {
+      "shotId": "SH_09",
+      "sceneId": "SC_04",
+      "shotCode": "SC04_CU_MAYA",
+      "shotType": "CLOSE_UP",
+      "description": "Close-up: Elara's face. Cautious. Measuring. Scarf over left shoulder.",
+      "status": "PLANNED",
+      "characterId": "ACT_02",
+      "plannedDurationMinutes": 8
+    },
+    {
+      "shotId": "SH_10",
+      "sceneId": "SC_04",
+      "shotCode": "SC04_CU_THOMAS",
+      "shotType": "CLOSE_UP",
+      "description": "Close-up: Thomas. Surprised but not alarmed. Camera hanging at his side.",
+      "status": "PLANNED",
+      "characterId": "ACT_01",
+      "plannedDurationMinutes": 8
+    },
+    {
+      "shotId": "SH_11",
+      "sceneId": "SC_05",
+      "shotCode": "SC05_MASTER",
+      "shotType": "MASTER",
+      "description": "Master: two-shot. Thomas by the window. Elara near the fireplace. Distance between them.",
+      "status": "PLANNED",
+      "characterId": null,
+      "plannedDurationMinutes": 20
+    },
+    {
+      "shotId": "SH_12",
+      "sceneId": "SC_05",
+      "shotCode": "SC05_OTS_MAYA",
+      "shotType": "OTS",
+      "description": "Over-the-shoulder Thomas's POV toward Elara. Elara holds notebook in LEFT hand throughout this coverage.",
+      "status": "PLANNED",
+      "characterId": "ACT_02",
+      "plannedDurationMinutes": 12
+    },
+    {
+      "shotId": "SH_13",
+      "sceneId": "SC_05",
+      "shotCode": "SC05_OTS_THOMAS",
+      "shotType": "OTS",
+      "description": "Over-the-shoulder Elara's POV toward Thomas.",
+      "status": "PLANNED",
+      "characterId": "ACT_01",
+      "plannedDurationMinutes": 12
+    },
+    {
+      "shotId": "SH_14",
+      "sceneId": "SC_06",
+      "shotCode": "SC06_MASTER",
+      "shotType": "MASTER",
+      "description": "Master: Elara leads Thomas into the attic space. Lantern lit. The space as she has made it.",
+      "status": "PLANNED",
+      "characterId": "ACT_02",
+      "plannedDurationMinutes": 15
+    },
+    {
+      "shotId": "SH_15",
+      "sceneId": "SC_06",
+      "shotCode": "SC06_ECU_NOTEBOOK",
+      "shotType": "ECU",
+      "description": "Extreme close-up: the notebook sitting on the RIGHT side of a wooden crate. This is a KEY CONTINUITY SHOT — notebook position relative to CFACT_01.",
+      "status": "PLANNED",
+      "characterId": null,
+      "plannedDurationMinutes": 6
+    },
+    {
+      "shotId": "SH_16",
+      "sceneId": "SC_07",
+      "shotCode": "SC07_MASTER",
+      "shotType": "MASTER",
+      "description": "Master: Thomas discovers the photograph. Elara watches from across the room.",
+      "status": "PLANNED",
+      "characterId": null,
+      "plannedDurationMinutes": 15
+    },
+    {
+      "shotId": "SH_17",
+      "sceneId": "SC_07",
+      "shotCode": "SC07_INSERT_PHOTO",
+      "shotType": "INSERT",
+      "description": "Insert: the family photograph in the cracked frame. Young Thomas and his mother. Crack on lower right corner visible.",
+      "status": "PLANNED",
+      "characterId": null,
+      "plannedDurationMinutes": 6
+    },
+    {
+      "shotId": "SH_18",
+      "sceneId": "SC_08",
+      "shotCode": "SC08_MASTER",
+      "shotType": "MASTER",
+      "description": "Master: Young Thomas and Elena in the attic. Lantern unlit in corner. She reads aloud. He listens.",
+      "status": "PLANNED",
+      "characterId": null,
+      "plannedDurationMinutes": 15
+    },
+    {
+      "shotId": "SH_19",
+      "sceneId": "SC_08",
+      "shotCode": "SC08_CU_YOUNG",
+      "shotType": "CLOSE_UP",
+      "description": "Close-up: Young Thomas listening. Expression open, trusting.",
+      "status": "PLANNED",
+      "characterId": "ACT_03",
+      "plannedDurationMinutes": 10
+    },
+    {
+      "shotId": "SH_20",
+      "sceneId": "SC_08",
+      "shotCode": "SC08_CU_ELENA",
+      "shotType": "CLOSE_UP",
+      "description": "Close-up: Elena reading. Partial — her face partially in shadow as per character concept.",
+      "status": "PLANNED",
+      "characterId": "ACT_04",
+      "plannedDurationMinutes": 10
+    },
+    {
+      "shotId": "SH_21",
+      "sceneId": "SC_08",
+      "shotCode": "SC08_INSERT_PHOTO",
+      "shotType": "INSERT",
+      "description": "Insert: the same family photograph — but newer, uncracked. This is the 'original' that pre-dates SC_07's cracked version.",
+      "status": "PLANNED",
+      "characterId": null,
+      "plannedDurationMinutes": 6
+    },
+    {
+      "shotId": "SH_22",
+      "sceneId": "SC_09",
+      "shotCode": "SC09_MASTER",
+      "shotType": "MASTER",
+      "description": "Master wide: Thomas and Elara in the golden hour garden. Long shadows. The house behind them.",
+      "status": "PLANNED",
+      "characterId": null,
+      "plannedDurationMinutes": 15
+    },
+    {
+      "shotId": "SH_23",
+      "sceneId": "SC_09",
+      "shotCode": "SC09_TWO_SHOT",
+      "shotType": "TWO_SHOT",
+      "description": "Two-shot: side by side, not facing each other. Both looking at the house.",
+      "status": "PLANNED",
+      "characterId": null,
+      "plannedDurationMinutes": 10
+    },
+    {
+      "shotId": "SH_24",
+      "sceneId": "SC_10",
+      "shotCode": "SC10_MASTER",
+      "shotType": "MASTER",
+      "description": "Master wide: Thomas raises camera, takes one photograph of the house. He lowers the camera. He walks away.",
+      "status": "PLANNED",
+      "characterId": "ACT_01",
+      "plannedDurationMinutes": 12
+    },
+    {
+      "shotId": "SH_25",
+      "sceneId": "SC_10",
+      "shotCode": "SC10_CU_THOMAS",
+      "shotType": "CLOSE_UP",
+      "description": "Close-up: Thomas's back as he walks away. Does not look back.",
+      "status": "PLANNED",
+      "characterId": "ACT_01",
+      "plannedDurationMinutes": 8
+    }
+  ],
+
+  "shootingSchedule": {
+    "shootDayId": "DAY_001",
+    "date": "2025-07-15",
+    "status": "PLANNED",
+    "notes": "Single shoot day. Exterior scenes must wrap by 17:00 (daylight constraint on LOC_02). ACT_03 and ACT_04 available morning only.",
+    "scheduledScenes": [
+      { "position": 1, "sceneId": "SC_01", "plannedStartTime": "08:00", "estimatedDurationMinutes": 35 },
+      { "position": 2, "sceneId": "SC_02", "plannedStartTime": "08:50", "estimatedDurationMinutes": 30 },
+      { "position": 3, "sceneId": "SC_03", "plannedStartTime": "09:30", "estimatedDurationMinutes": 40 },
+      { "position": 4, "sceneId": "SC_08", "plannedStartTime": "10:20", "estimatedDurationMinutes": 40 },
+      { "position": 5, "sceneId": "SC_04", "plannedStartTime": "11:15", "estimatedDurationMinutes": 45 },
+      { "position": 6, "sceneId": "SC_05", "plannedStartTime": "12:15", "estimatedDurationMinutes": 50 },
+      { "position": 7, "sceneId": "SC_06", "plannedStartTime": "13:20", "estimatedDurationMinutes": 35 },
+      { "position": 8, "sceneId": "SC_07", "plannedStartTime": "14:10", "estimatedDurationMinutes": 30 },
+      { "position": 9, "sceneId": "SC_09", "plannedStartTime": "15:15", "estimatedDurationMinutes": 30 },
+      { "position": 10, "sceneId": "SC_10", "plannedStartTime": "16:00", "estimatedDurationMinutes": 20 }
+    ]
+  },
+
+  "builtInContinuityConflict": {
+    "description": "Demo continuity conflict for LAST LIGHT",
+    "factA": {
+      "factId": "CFACT_01",
+      "sceneId": "SC_05",
+      "shotId": "SC05_OTS_MAYA",
+      "characterId": "ACT_02",
+      "propId": "PROP_02",
+      "attribute": "notebook_hand",
+      "value": "LEFT",
+      "source": "SCRIPT",
+      "humanReadable": "In SC_05 (Confrontation), Elara holds the notebook in her LEFT hand during SC05_OTS_MAYA coverage."
+    },
+    "factB": {
+      "factId": "CFACT_02",
+      "sceneId": "SC_06",
+      "shotId": "SC06_ECU_NOTEBOOK",
+      "characterId": null,
+      "propId": "PROP_02",
+      "attribute": "notebook_position",
+      "value": "RIGHT_SIDE_OF_CRATE",
+      "source": "SCRIPT",
+      "humanReadable": "In SC_06 (Attic Discovery), the notebook is on the RIGHT side of the crate in SC06_ECU_NOTEBOOK."
+    },
+    "conflict": "If SC_05 and SC_06 are shot in immediate continuity (same moment), the notebook moves from Elara's LEFT hand to the RIGHT side of the crate without explanation. The Continuity Agent should flag this as an INFERENCE (not a confirmed error — there could be a legitimate story reason)."
+  }
+}
