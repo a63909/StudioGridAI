@@ -1,9 +1,12 @@
 """Typed client for the FastAPI Tool Server used by Google ADK agents."""
 from __future__ import annotations
 
+import asyncio
 from typing import Protocol
 
 import httpx
+from google.auth.transport.requests import Request as GoogleAuthRequest
+from google.oauth2 import id_token
 
 from ..core.tool_registry import ToolRegistry
 from ..domain.enums import OriginType
@@ -44,16 +47,39 @@ class AgentToolGateway(Protocol):
 
 
 class FastAPIToolGateway:
-    """HTTP implementation used by the real ADK runtime."""
+    """HTTP gateway with optional Google-signed Cloud Run ID-token auth."""
 
-    def __init__(self, base_url: str, timeout_seconds: float = 30.0) -> None:
+    def __init__(
+        self,
+        base_url: str,
+        timeout_seconds: float = 30.0,
+        *,
+        authenticated: bool = False,
+        audience: str | None = None,
+    ) -> None:
         self._base_url = base_url.rstrip("/")
         self._timeout = timeout_seconds
+        self._authenticated = authenticated
+        self._audience = (audience or self._base_url).rstrip("/")
+        if authenticated and not self._base_url.startswith("https://"):
+            raise ValueError("Authenticated Tool Server URL must use HTTPS")
+
+    def _build_auth_headers(self) -> dict[str, str]:
+        """Fetch an ephemeral ID token from ADC/runtime identity; never log it."""
+        if not self._authenticated:
+            return {}
+        token = id_token.fetch_id_token(GoogleAuthRequest(), self._audience)
+        return {"Authorization": f"Bearer {token}"}
 
     async def _post(self, path: str, payload: dict) -> dict:
         try:
+            headers = await asyncio.to_thread(self._build_auth_headers)
             async with httpx.AsyncClient(timeout=self._timeout) as client:
-                response = await client.post(f"{self._base_url}{path}", json=payload)
+                response = await client.post(
+                    f"{self._base_url}{path}",
+                    json=payload,
+                    headers=headers,
+                )
         except httpx.HTTPError as exc:
             raise ToolServerError(f"Tool Server unavailable: {type(exc).__name__}") from exc
         if not response.is_success:

@@ -684,6 +684,7 @@ def test_firestore_store_imports_cleanly():
     """FirestoreStateStore class is importable and has required methods."""
     from services.api.db.firestore_store import FirestoreStateStore
     assert hasattr(FirestoreStateStore, "save_agent_execution")
+    assert hasattr(FirestoreStateStore, "get_application_state")
     assert hasattr(FirestoreStateStore, "save_proposal")
     assert hasattr(FirestoreStateStore, "save_event")
     assert hasattr(FirestoreStateStore, "cleanup_demo_data")
@@ -699,6 +700,36 @@ def test_firestore_namespace_isolated():
     params = list(sig.parameters.keys())
     assert "project_id" in params
     assert "production_id" in params
+
+
+def test_durable_state_restores_without_losing_seed_metadata(store):
+    """Cold starts hydrate Firestore state instead of overwriting it with the seed."""
+    from services.api.db.local_store import LocalStateStore
+
+    delayed = store.actors["ACT_02"].model_copy(
+        update={"currentStatus": ActorStatus.DELAYED, "delayMinutes": 27}
+    )
+    durable = {
+        "production": store.production.model_dump(mode="json"),
+        "actors": [
+            (delayed if actor.actorId == "ACT_02" else actor).model_dump(mode="json")
+            for actor in store.actors.values()
+        ],
+        "locations": [item.model_dump(mode="json") for item in store.locations.values()],
+        "props": [item.model_dump(mode="json") for item in store.props.values()],
+        "scenes": [item.model_dump(mode="json") for item in store.scenes.values()],
+        "shots": [item.model_dump(mode="json") for item in store.shots.values()],
+        "totalDelayMinutes": 27,
+        "recoveredMinutes": 4,
+    }
+    target = LocalStateStore()
+    target.continuity_facts = dict(store.continuity_facts)
+    target.restore_application_state(durable)
+
+    assert target.actors["ACT_02"].currentStatus == ActorStatus.DELAYED
+    assert target._total_delay_minutes == 27
+    assert target._recovered_minutes == 4
+    assert target.continuity_facts == store.continuity_facts
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -786,3 +817,80 @@ async def test_enabled_ai_never_silently_uses_deterministic_schedule(monkeypatch
 
     routed_agents = [call.args[0] for call in orchestrator._run_agent.await_args_list]
     assert deterministic_schedule not in routed_agents
+
+
+def test_cloud_tool_server_mode_hides_human_routes(monkeypatch):
+    """The private agent receiver cannot reach human approval/rejection APIs."""
+    from fastapi.testclient import TestClient
+    import services.api.main as api_main
+
+    monkeypatch.setattr(api_main.settings, "STUDIOGRID_AGENT_TOOL_SERVER_ONLY", True)
+    monkeypatch.setattr(api_main.settings, "STUDIOGRID_FIRESTORE_ENABLED", False)
+    with TestClient(api_main.app) as client:
+        assert client.get("/health").status_code == 200
+        assert client.post(
+            "/tools/agent/schedule-proposals", json={}
+        ).status_code == 422
+        assert client.post(
+            "/schedule/proposals/any/approve",
+            json={"approvedBy": "SCHEDULE_AGENT"},
+        ).status_code == 404
+        assert client.post(
+            "/schedule/proposals/any/reject",
+            json={"rejectedBy": "SCHEDULE_AGENT", "reason": "bypass"},
+        ).status_code == 404
+
+
+def test_local_mode_preserves_human_routes(monkeypatch):
+    """Local/full mode remains backward compatible."""
+    from fastapi.testclient import TestClient
+    import services.api.main as api_main
+
+    monkeypatch.setattr(api_main.settings, "STUDIOGRID_AGENT_TOOL_SERVER_ONLY", False)
+    monkeypatch.setattr(api_main.settings, "STUDIOGRID_FIRESTORE_ENABLED", False)
+    with TestClient(api_main.app) as client:
+        response = client.post(
+            "/schedule/proposals/not-found/approve",
+            json={"approvedBy": "production_manager"},
+        )
+    assert response.status_code == 400
+
+
+def test_authenticated_tool_gateway_uses_canonical_audience(monkeypatch):
+    """Cloud mode obtains an ephemeral Google ID token for the service URL audience."""
+    from services.api.tools import http_client
+
+    observed: dict[str, str] = {}
+
+    def fake_fetch_id_token(request, audience):
+        observed["audience"] = audience
+        return "unit-test-id-token"
+
+    monkeypatch.setattr(http_client.id_token, "fetch_id_token", fake_fetch_id_token)
+    gateway = http_client.FastAPIToolGateway(
+        "https://studiogrid-tool-server.example.run.app/",
+        authenticated=True,
+    )
+    headers = gateway._build_auth_headers()
+
+    assert observed["audience"] == "https://studiogrid-tool-server.example.run.app"
+    assert headers == {"Authorization": "Bearer unit-test-id-token"}
+
+
+def test_authenticated_tool_gateway_requires_https():
+    from services.api.tools.http_client import FastAPIToolGateway
+
+    with pytest.raises(ValueError, match="must use HTTPS"):
+        FastAPIToolGateway("http://127.0.0.1:8000", authenticated=True)
+
+
+def test_local_tool_gateway_does_not_request_identity_token(monkeypatch):
+    from services.api.tools import http_client
+
+    monkeypatch.setattr(
+        http_client.id_token,
+        "fetch_id_token",
+        lambda *args, **kwargs: pytest.fail("Local mode must not request an ID token"),
+    )
+    gateway = http_client.FastAPIToolGateway("http://127.0.0.1:8000")
+    assert gateway._build_auth_headers() == {}

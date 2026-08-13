@@ -123,6 +123,28 @@ class LocalStateStore:
             shot = Shot(**shot_data)
             self.shots[shot.shotId] = shot
 
+    def restore_application_state(self, data: dict[str, Any]) -> None:
+        """Overlay a validated durable state after loading static seed metadata."""
+        production = data.get("production")
+        if production is not None:
+            self.production = Production.model_validate(production)
+
+        model_sets = (
+            ("actors", Actor, "actorId"),
+            ("locations", Location, "locationId"),
+            ("props", Prop, "propId"),
+            ("scenes", Scene, "sceneId"),
+            ("shots", Shot, "shotId"),
+        )
+        for field_name, model_type, id_field in model_sets:
+            if field_name not in data:
+                continue
+            restored = [model_type.model_validate(item) for item in data[field_name]]
+            setattr(self, field_name, {getattr(item, id_field): item for item in restored})
+
+        self._total_delay_minutes = int(data.get("totalDelayMinutes", 0))
+        self._recovered_minutes = int(data.get("recoveredMinutes", 0))
+
     # ─────────────────────────────────────────────────────────────────────────
     # Event log
     # ─────────────────────────────────────────────────────────────────────────

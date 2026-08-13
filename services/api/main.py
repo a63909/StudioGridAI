@@ -6,8 +6,9 @@ import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from .config import settings
 from .core.event_bus import LocalEventBus
@@ -53,7 +54,11 @@ async def lifespan(app: FastAPI):
                     database=settings.FIRESTORE_DATABASE,
                 )
                 await persistence.healthcheck()
-                await persistence.save_application_state(store)
+                durable_state = await persistence.get_application_state()
+                if durable_state is None:
+                    await persistence.save_application_state(store)
+                else:
+                    store.restore_application_state(durable_state)
             except Exception as exc:
                 mark_runtime_error("FIRESTORE_UNAVAILABLE")
                 settings.STUDIOGRID_AI_ENABLED = False
@@ -72,10 +77,14 @@ async def lifespan(app: FastAPI):
             persistence=persistence,
         )
 
-        # Wire up orchestrator
-        from agents.orchestrator import ProductionOrchestrator
-        orchestrator = ProductionOrchestrator(store=store, event_bus=event_bus)
-        app.state.orchestrator = orchestrator
+        if settings.STUDIOGRID_AGENT_TOOL_SERVER_ONLY:
+            # The private Cloud Run receiver exposes typed agent tools only.
+            # Human routes stay available in the local/full application mode.
+            app.state.orchestrator = None
+        else:
+            from agents.orchestrator import ProductionOrchestrator
+            orchestrator = ProductionOrchestrator(store=store, event_bus=event_bus)
+            app.state.orchestrator = orchestrator
 
         logger.info("last_light_dataset_loaded", extra={"productionId": data["productionId"]})
     else:
@@ -101,6 +110,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def private_agent_tool_boundary(request: Request, call_next):
+    """Hide every non-agent route in the private Cloud Run deployment."""
+    if settings.STUDIOGRID_AGENT_TOOL_SERVER_ONLY:
+        path = request.url.path
+        if path != "/health" and not path.startswith("/tools/agent/"):
+            return JSONResponse(status_code=404, content={"detail": "Not found"})
+    return await call_next(request)
 
 # Inject shared state into routers
 app.state.store = store

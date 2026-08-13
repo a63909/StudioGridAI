@@ -62,6 +62,11 @@ class FirestoreStateStore:
         """Perform a real namespaced Firestore read without mutating data."""
         await self._root().get()
 
+    async def get_application_state(self) -> dict[str, Any] | None:
+        """Read the durable application state used to hydrate a cold instance."""
+        doc = await self._sub("state").document("current").get()
+        return doc.to_dict() if doc.exists else None
+
     async def save_application_state(self, store: Any) -> None:
         """Persist the validated in-memory application state as one atomic document."""
         production = store.production.model_dump(mode="json") if store.production else None

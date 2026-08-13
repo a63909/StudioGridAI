@@ -74,7 +74,10 @@ class ProductionOrchestrator(BaseAgent):
             try:
                 from agents.google_adk.schedule_agent_real import RealScheduleAgent
                 from agents.google_adk.coverage_agent_real import RealCoverageAgent
-                gateway = FastAPIToolGateway(settings.STUDIOGRID_TOOL_SERVER_URL)
+                gateway = FastAPIToolGateway(
+                    settings.STUDIOGRID_TOOL_SERVER_URL,
+                    authenticated=settings.STUDIOGRID_TOOL_SERVER_AUTHENTICATED,
+                )
                 self._ai_schedule_agent = RealScheduleAgent(store=store, gateway=gateway)
                 self._ai_coverage_agent = RealCoverageAgent(store=store, gateway=gateway)
                 logger.info(

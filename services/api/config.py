@@ -19,7 +19,9 @@ class Settings(BaseSettings):
     # Phase 2 — real Google Cloud runtime (ADC only; never JSON keys)
     STUDIOGRID_AI_ENABLED: bool = False
     STUDIOGRID_FIRESTORE_ENABLED: bool = False
+    STUDIOGRID_AGENT_TOOL_SERVER_ONLY: bool = False
     STUDIOGRID_TOOL_SERVER_URL: str = "http://127.0.0.1:8000"
+    STUDIOGRID_TOOL_SERVER_AUTHENTICATED: bool = False
     STUDIOGRID_PRODUCTION_ID: str = "last-light-demo"
     GOOGLE_CLOUD_PROJECT: str = "studiogrid-ai"
     GOOGLE_CLOUD_LOCATION: str = "global"
