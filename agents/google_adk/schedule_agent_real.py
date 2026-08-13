@@ -20,6 +20,7 @@ from services.api.tools.contracts import CreateScheduleProposalInput
 from services.api.tools.http_client import AgentToolGateway
 
 from .agent_graph import build_schedule_orchestrator
+from .production_context import build_schedule_context
 from .runtime import (
     MODEL_NAME,
     build_execution_trace,
@@ -211,71 +212,11 @@ class RealScheduleAgent(BaseAgent):
     def agent_name(self) -> str:
         return AGENT_NAME
 
-    def _eligible_scenes(self, actor_id: str) -> list[dict[str, Any]]:
-        day = self._store.get_active_shoot_day()
-        if day is None:
-            return []
-        position_by_scene = {item.sceneId: item.position for item in day.scheduledScenes}
-        candidates: list[dict[str, Any]] = []
-        for scene in self._store.scenes.values():
-            position = position_by_scene.get(scene.sceneId)
-            location = self._store.locations.get(scene.locationId)
-            eligible = (
-                position is not None
-                and position > 1
-                and actor_id not in scene.characterIds
-                and self._store._scene_actors_available(scene.sceneId)
-                and self._store.compute_scene_status(scene.sceneId).value
-                not in {"COMPLETE", "BLOCKED"}
-                and location is not None
-                and location.status.value == "AVAILABLE"
-            )
-            if eligible:
-                candidates.append(
-                    {
-                        "sceneId": scene.sceneId,
-                        "title": scene.title,
-                        "currentPosition": position,
-                        "estimatedDurationMinutes": scene.estimatedDurationMinutes,
-                        "characterIds": scene.characterIds,
-                        "location": {
-                            "locationId": location.locationId,
-                            "availableUntilTime": location.availableUntilTime,
-                            "daylightConstraint": location.daylightConstraint,
-                            "daylightDeadlineTime": location.daylightDeadlineTime,
-                        },
-                        "eligible": True,
-                    }
-                )
-        return candidates
-
     def _production_context(self, event: ProductionEvent) -> tuple[str, set[str]]:
-        actor_id = str(event.payload["actorId"])
-        day = self._store.get_active_shoot_day()
-        candidates = self._eligible_scenes(actor_id)
-        actor = self._store.actors.get(actor_id)
-        payload = {
-            "classification": {
-                "event": "FACT",
-                "eligibility": "FACT",
-                "agentOutput": "RECOMMENDATION",
-                "approval": "HUMAN_DECISION_ONLY",
-            },
-            "event": {
-                "eventId": event.eventId,
-                "type": event.type.value,
-                "actorId": actor_id,
-                "actorName": actor.name if actor else event.payload.get("actorName"),
-                "delayMinutes": event.payload.get("delayMinutes", 0),
-                "untrustedProductionNote": event.payload.get("reason", ""),
-            },
-            "currentSchedule": [
-                item.model_dump(mode="json") for item in day.scheduledScenes
-            ] if day else [],
-            "blockedSceneIds": self._store.get_scenes_blocked_by_actor(actor_id),
-            "eligibleScenes": candidates,
+        payload = build_schedule_context(self._store, event)
+        return json.dumps(payload, ensure_ascii=False), {
+            item["sceneId"] for item in payload["eligibleScenes"]
         }
-        return json.dumps(payload, ensure_ascii=False), {item["sceneId"] for item in candidates}
 
     async def handle_event(self, event: ProductionEvent) -> None:
         if event.type != EventType.ACTOR_DELAYED:

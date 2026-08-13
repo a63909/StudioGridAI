@@ -20,6 +20,7 @@ from services.api.tools.contracts import CreateCoverageAlertInput
 from services.api.tools.http_client import AgentToolGateway
 
 from .agent_graph import build_coverage_orchestrator
+from .production_context import build_coverage_context
 from .runtime import (
     MODEL_NAME,
     build_execution_trace,
@@ -209,27 +210,7 @@ class RealCoverageAgent(BaseAgent):
             mark_runtime_error(error_code or "AGENT_EXECUTION_ERROR")
 
     def _context_json(self, scene_id: str) -> str:
-        scene = self._store.scenes[scene_id]
-        shots = [shot for shot in self._store.shots.values() if shot.sceneId == scene_id]
-        return json.dumps(
-            {
-                "sceneId": scene_id,
-                "classification": {
-                    "plannedAndCompletedShots": "FACT",
-                    "editSufficiency": "INFERENCE",
-                },
-                "FACT_plannedShotIds": [shot.shotId for shot in shots],
-                "FACT_completedShotIds": [
-                    shot.shotId for shot in shots if shot.status.value == "COMPLETE"
-                ],
-                "FACT_missingShotIds": [
-                    shot.shotId for shot in shots
-                    if shot.status.value not in {"COMPLETE", "SKIPPED"}
-                ],
-                "untrustedSceneDescription": scene.description,
-            },
-            ensure_ascii=False,
-        )
+        return json.dumps(build_coverage_context(self._store, scene_id), ensure_ascii=False)
 
     async def _run_adk(self, ctx: _CoverageToolContext, context_json: str) -> None:
         root_agent = build_coverage_orchestrator(_make_coverage_tool(ctx))

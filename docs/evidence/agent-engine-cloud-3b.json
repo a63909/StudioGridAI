@@ -1,0 +1,299 @@
+{
+  "verifiedAt": "2026-08-13T15:02:25.927282Z",
+  "agentEngineResource": "projects/729921508335/locations/europe-west3/reasoningEngines/5132986471388545024",
+  "displayName": "studiogrid-production-orchestrator-3b",
+  "region": "europe-west3",
+  "model": "gemini-3.6-flash",
+  "deployment": {
+    "effectiveIdentity": "studiogrid-agent-runtime@studiogrid-ai.iam.gserviceaccount.com",
+    "pythonVersion": "3.12",
+    "minInstances": 0,
+    "maxInstances": 1,
+    "stagingBucket": "gs://studiogrid-ai-agent-staging",
+    "toolServerUrl": "https://studiogrid-tool-server-udlec7cupa-ey.a.run.app",
+    "toolServerAlias": "https://studiogrid-tool-server-729921508335.europe-west3.run.app",
+    "toolServerRevision": "studiogrid-tool-server-00002-bpz",
+    "runInvokerMember": "serviceAccount:studiogrid-agent-runtime@studiogrid-ai.iam.gserviceaccount.com",
+    "unauthenticatedHealthStatus": 403,
+    "sampledCloudTrace": "projects/studiogrid-ai/traces/2ed27c8617d9fe6c60c2491552db6996",
+    "capturedMessageContent": false
+  },
+  "operationSchemas": [
+    "async_create_session",
+    "async_get_session",
+    "async_list_sessions",
+    "async_stream_query"
+  ],
+  "act02Maya45": {
+    "remote": {
+      "sessionId": "7578262398411210752",
+      "executionId": "337153e5-8ba4-4ad1-af3d-6e73ca2fa829",
+      "route": "SCHEDULE_AGENT",
+      "toolAttempted": true,
+      "proposalCreated": true,
+      "lastErrorCode": null,
+      "lastResult": {
+        "proposalId": "029010eb-4c1d-4a51-b884-255fb89bb700",
+        "status": "PENDING"
+      },
+      "eventFlow": [
+        "PRODUCTION_ORCHESTRATOR:transfer_to_agent",
+        "SCHEDULE_AGENT:create_schedule_proposal",
+        "SCHEDULE_AGENT:PENDING"
+      ]
+    },
+    "firestore": {
+      "executionId": "337153e5-8ba4-4ad1-af3d-6e73ca2fa829",
+      "proposalCorrelationId": "agent-engine-3b-act02-20260813150132",
+      "proposalExecutionId": "337153e5-8ba4-4ad1-af3d-6e73ca2fa829",
+      "proposalId": "029010eb-4c1d-4a51-b884-255fb89bb700",
+      "proposalModel": "gemini-3.6-flash",
+      "proposalOriginAgent": "SCHEDULE_AGENT",
+      "proposalStatus": "PENDING",
+      "trace": {
+        "executionId": "337153e5-8ba4-4ad1-af3d-6e73ca2fa829",
+        "correlationId": "agent-engine-3b-act02-20260813150132",
+        "agentName": "SCHEDULE_AGENT",
+        "modelName": "gemini-3.6-flash",
+        "eventId": "27495297-3e3d-4ec2-9bc8-a54724f19dff",
+        "startedAt": "2026-08-13T15:01:32.117407",
+        "completedAt": "2026-08-13T15:01:43.192707",
+        "durationMs": 11075,
+        "toolCalls": [
+          {
+            "toolName": "create_schedule_proposal",
+            "callerType": "AGENT",
+            "callerId": "SCHEDULE_AGENT",
+            "arguments": {
+              "targetSceneId": "SC_02",
+              "evidenceCount": 2,
+              "expectedBenefitMinutes": 30,
+              "confidence": 0.9
+            },
+            "result": {
+              "proposalId": "029010eb-4c1d-4a51-b884-255fb89bb700",
+              "status": "PENDING"
+            },
+            "status": "OK"
+          }
+        ],
+        "status": "SUCCESS",
+        "errorCode": null,
+        "evidenceReferences": [
+          "029010eb-4c1d-4a51-b884-255fb89bb700"
+        ],
+        "shortRationale": "Processed ACTOR_DELAYED and created one PENDING proposal."
+      }
+    }
+  },
+  "act03Daniel30": {
+    "remote": {
+      "sessionId": "3469853638342475776",
+      "executionId": "cdfb9306-12e8-4edd-ad11-7923b78b3c17",
+      "route": "SCHEDULE_AGENT",
+      "toolAttempted": true,
+      "proposalCreated": true,
+      "lastErrorCode": null,
+      "lastResult": {
+        "proposalId": "f79dd7eb-15c9-4ff6-8949-35534574c247",
+        "status": "PENDING"
+      },
+      "eventFlow": [
+        "PRODUCTION_ORCHESTRATOR:transfer_to_agent",
+        "SCHEDULE_AGENT:create_schedule_proposal",
+        "SCHEDULE_AGENT:PENDING"
+      ]
+    },
+    "firestore": {
+      "executionId": "cdfb9306-12e8-4edd-ad11-7923b78b3c17",
+      "proposalCorrelationId": "agent-engine-3b-act03-20260813150148",
+      "proposalExecutionId": "cdfb9306-12e8-4edd-ad11-7923b78b3c17",
+      "proposalId": "f79dd7eb-15c9-4ff6-8949-35534574c247",
+      "proposalModel": "gemini-3.6-flash",
+      "proposalOriginAgent": "SCHEDULE_AGENT",
+      "proposalStatus": "PENDING",
+      "trace": {
+        "executionId": "cdfb9306-12e8-4edd-ad11-7923b78b3c17",
+        "correlationId": "agent-engine-3b-act03-20260813150148",
+        "agentName": "SCHEDULE_AGENT",
+        "modelName": "gemini-3.6-flash",
+        "eventId": "597ae843-7721-4b4b-80fb-fd3ffec16b60",
+        "startedAt": "2026-08-13T15:01:48.677358",
+        "completedAt": "2026-08-13T15:01:59.029424",
+        "durationMs": 10352,
+        "toolCalls": [
+          {
+            "toolName": "create_schedule_proposal",
+            "callerType": "AGENT",
+            "callerId": "SCHEDULE_AGENT",
+            "arguments": {
+              "targetSceneId": "SC_04",
+              "evidenceCount": 3,
+              "expectedBenefitMinutes": 30,
+              "confidence": 0.9
+            },
+            "result": {
+              "proposalId": "f79dd7eb-15c9-4ff6-8949-35534574c247",
+              "status": "PENDING"
+            },
+            "status": "OK"
+          }
+        ],
+        "status": "SUCCESS",
+        "errorCode": null,
+        "evidenceReferences": [
+          "f79dd7eb-15c9-4ff6-8949-35534574c247"
+        ],
+        "shortRationale": "Processed ACTOR_DELAYED and created one PENDING proposal."
+      }
+    }
+  },
+  "coverageSC05": {
+    "remote": {
+      "sessionId": "3859837218575089664",
+      "executionId": "6f570e35-d99a-4143-8afe-439b9655442c",
+      "route": "COVERAGE_AGENT",
+      "toolAttempted": true,
+      "alertCreated": true,
+      "lastErrorCode": null,
+      "lastResult": {
+        "alertId": "c26aeee3-d741-445a-af0d-eee3ce499f84",
+        "status": "OPEN"
+      },
+      "eventFlow": [
+        "PRODUCTION_ORCHESTRATOR:transfer_to_agent",
+        "COVERAGE_AGENT:create_coverage_alert",
+        "COVERAGE_AGENT:OPEN"
+      ]
+    },
+    "firestore": {
+      "alertId": "c26aeee3-d741-445a-af0d-eee3ce499f84",
+      "alertSceneId": "SC_05",
+      "alertStatus": "OPEN",
+      "executionId": "6f570e35-d99a-4143-8afe-439b9655442c",
+      "missingShotIds": [
+        "SH_12",
+        "SH_13"
+      ],
+      "trace": {
+        "executionId": "6f570e35-d99a-4143-8afe-439b9655442c",
+        "correlationId": "agent-engine-3b-coverage-20260813150202",
+        "agentName": "COVERAGE_AGENT",
+        "modelName": "gemini-3.6-flash",
+        "eventId": "1aeaef5b-b3db-4449-b7a5-4c405fb87201",
+        "startedAt": "2026-08-13T15:02:02.806712",
+        "completedAt": "2026-08-13T15:02:09.788349",
+        "durationMs": 6981,
+        "toolCalls": [
+          {
+            "toolName": "create_coverage_alert",
+            "callerType": "AGENT",
+            "callerId": "COVERAGE_AGENT",
+            "arguments": {
+              "sceneId": "SC_05",
+              "missingShotIds": [
+                "SH_12",
+                "SH_13"
+              ]
+            },
+            "result": {
+              "alertId": "c26aeee3-d741-445a-af0d-eee3ce499f84",
+              "status": "OPEN"
+            },
+            "status": "OK"
+          }
+        ],
+        "status": "SUCCESS",
+        "errorCode": null,
+        "evidenceReferences": [
+          "c26aeee3-d741-445a-af0d-eee3ce499f84"
+        ],
+        "shortRationale": "Compared factual shots and created one coverage alert."
+      }
+    },
+    "noToolSessionIds": []
+  },
+  "failureSafety": {
+    "remote": {
+      "sessionId": "4142015882727522304",
+      "executionId": "49bd2481-e35d-4271-9de8-a3dc42b1c62c",
+      "route": "SCHEDULE_AGENT",
+      "toolAttempted": true,
+      "proposalCreated": false,
+      "lastErrorCode": "ToolServerError",
+      "lastResult": null,
+      "eventFlow": [
+        "PRODUCTION_ORCHESTRATOR:transfer_to_agent",
+        "SCHEDULE_AGENT:create_schedule_proposal",
+        "SCHEDULE_AGENT:ERROR:ToolServerError"
+      ]
+    },
+    "firestoreTrace": {
+      "executionId": "49bd2481-e35d-4271-9de8-a3dc42b1c62c",
+      "correlationId": "agent-engine-3b-act02-20260813150132",
+      "agentName": "SCHEDULE_AGENT",
+      "modelName": "gemini-3.6-flash",
+      "eventId": "27495297-3e3d-4ec2-9bc8-a54724f19dff",
+      "startedAt": "2026-08-13T15:02:13.919546",
+      "completedAt": "2026-08-13T15:02:21.784039",
+      "durationMs": 7864,
+      "toolCalls": [
+        {
+          "toolName": "create_schedule_proposal",
+          "callerType": "AGENT",
+          "callerId": "SCHEDULE_AGENT",
+          "arguments": {
+            "targetSceneId": "SC_DOES_NOT_EXIST",
+            "evidenceCount": 2,
+            "expectedBenefitMinutes": 45,
+            "confidence": 0.9
+          },
+          "result": {
+            "errorCode": "ToolServerError"
+          },
+          "status": "ERROR"
+        }
+      ],
+      "status": "ERROR",
+      "errorCode": "ToolServerError",
+      "evidenceReferences": [],
+      "shortRationale": "SCHEDULE_AGENT tool call failed with ToolServerError."
+    },
+    "proposalMutationCount": 0,
+    "noToolSessionIds": []
+  },
+  "sessions": [
+    {
+      "sessionId": "7578262398411210752",
+      "executionId": "337153e5-8ba4-4ad1-af3d-6e73ca2fa829",
+      "route": "SCHEDULE_AGENT",
+      "toolAttempted": true,
+      "proposalCreated": true,
+      "lastErrorCode": null
+    },
+    {
+      "sessionId": "3469853638342475776",
+      "executionId": "cdfb9306-12e8-4edd-ad11-7923b78b3c17",
+      "route": "SCHEDULE_AGENT",
+      "toolAttempted": true,
+      "proposalCreated": true,
+      "lastErrorCode": null
+    },
+    {
+      "sessionId": "3859837218575089664",
+      "executionId": "6f570e35-d99a-4143-8afe-439b9655442c",
+      "route": "COVERAGE_AGENT",
+      "toolAttempted": true,
+      "alertCreated": true,
+      "lastErrorCode": null
+    },
+    {
+      "sessionId": "4142015882727522304",
+      "executionId": "49bd2481-e35d-4271-9de8-a3dc42b1c62c",
+      "route": "SCHEDULE_AGENT",
+      "toolAttempted": true,
+      "proposalCreated": false,
+      "lastErrorCode": "ToolServerError"
+    }
+  ]
+}
