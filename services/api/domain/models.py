@@ -188,6 +188,10 @@ class ScheduleProposal(BaseModel):
     affectedScenes: list[str]
     risks: list[ProposalRisk]
     confidence: float = Field(ge=0.0, le=1.0)
+    agentExecutionId: str | None = None
+    correlationId: str | None = None
+    modelName: str | None = None
+    durationMs: int | None = None
     createdAt: datetime = Field(default_factory=datetime.utcnow)
     resolvedAt: datetime | None = None
     resolvedBy: str | None = None   # set to approver/rejecter identity on resolution
@@ -309,17 +313,21 @@ class AgentExecution(BaseModel):
     In PRODUCTION mode (Phase 2): model is filled by Gemini, toolCalls from real inference.
 
     Never stores model chain-of-thought or internal reasoning.
+    Only stores operational metadata and concise rationale/evidence.
     """
     executionId: str = Field(default_factory=_new_id)
+    correlationId: str = Field(default_factory=_new_id)
     agentName: str
-    model: str | None = None    # None in DEV mode
+    modelName: str | None = None    # None in DEV mode; Gemini model ID in PRODUCTION
+    eventId: str | None = None      # triggering event ID
     startedAt: datetime = Field(default_factory=datetime.utcnow)
     completedAt: datetime | None = None
+    durationMs: int | None = None   # wall-clock milliseconds
     toolCalls: list[ToolCall] = Field(default_factory=list)
-    resultStatus: str = "PENDING"
+    status: str = "PENDING"
     errorCode: str | None = None
-    correlationId: str = Field(default_factory=_new_id)
-    evidenceRefs: list[str] = Field(default_factory=list)
+    evidenceReferences: list[str] = Field(default_factory=list)
+    shortRationale: str = ""        # concise summary — no chain-of-thought
     mode: AgentMode = AgentMode.DEV
 
 

@@ -1,7 +1,7 @@
 """Schedule Agent — Phase 1 deterministic implementation.
 
 Handles ACTOR_DELAYED events and creates schedule proposals.
-In Phase 2, this logic is replaced by real Gemini inference via Agent Builder.
+In Phase 2, this logic is replaced by real Gemini inference via Google ADK.
 The tool calls and state mutation paths remain identical.
 """
 from __future__ import annotations
@@ -37,7 +37,7 @@ class ScheduleAgent(BaseAgent):
     """Detects scheduling conflicts and creates rescheduling proposals.
 
     Phase 1: deterministic logic.
-    Phase 2: Gemini inference via Agent Builder (same interface).
+    Phase 2: Gemini inference via Google ADK (same interface).
     """
 
     mode: AgentMode = AgentMode.DEV

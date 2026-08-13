@@ -36,7 +36,7 @@ We aim to respond within 72 hours.
       ├── Audit Logger → Cloud Logging
       └── State Layer → Firestore (via ADC, no key files)
 
-[ Agent Builder / Gemini ]
+[ Google ADK / Vertex Gemini ]
       │  authenticated tool calls → FastAPI Tool Server only
       └── Agents NEVER access Firestore directly
 ```
@@ -44,7 +44,7 @@ We aim to respond within 72 hours.
 ### Rules
 
 - All state mutations pass through the FastAPI Tool Server
-- Agents (Gemini / Agent Builder) never access Firestore directly
+- Agents (Gemini / Google ADK) never access Firestore directly
 - All mutations: schema validation → authorization → approval gate → audit log
 - Human Approval Gates block destructive mutations
 - No secrets in code, environment files, or Git history
@@ -56,7 +56,7 @@ We aim to respond within 72 hours.
 | Partner API keys | Google Secret Manager only |
 | Gemini API key (if explicit) | Google Secret Manager only |
 | Firestore credentials | Application Default Credentials (ADC) — no key files |
-| Agent Builder credentials | ADC — no key files |
+| Google ADK / Agent Engine credentials | ADC — no key files |
 | Any credential | Never in Git, never in .env committed |
 
 ### Human Approval Required For

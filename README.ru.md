@@ -7,8 +7,8 @@
 > и предлагает следующий лучший шаг».
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Этап](https://img.shields.io/badge/Этап-1%20MVP-blue)]()
-[![Статус ИИ](https://img.shields.io/badge/ИИ-DEV%20MODE-orange)]()
+[![Этап](https://img.shields.io/badge/Этап-2%20Local%20Runtime-blue)]()
+[![Статус ИИ](https://img.shields.io/badge/ИИ-Gemini%203.6%20Flash-green)]()
 
 ---
 
@@ -84,15 +84,18 @@ StudioGrid AI — **не чат-бот**. Не генератор сценари
 
 | Сервис | Назначение |
 |--------|-----------|
-| **Gemini** | LLM-инференс для всех агентов *(Этап 2)* |
-| **Agent Builder** | Официальный agent runtime Google *(Этап 2)* |
+| **Gemini 3.6 Flash** | Реальный Vertex AI inference через endpoint `global` |
+| **Google ADK** | `PRODUCTION_ORCHESTRATOR`, Schedule и Coverage agents |
+| **Vertex AI Agent Engine** | `AdkApp` подготовлен; первый deployment ожидает подтверждения IAM |
 | **Cloud Run** | FastAPI tool server + Next.js frontend |
-| **Firestore** | Хранение production state *(Этап 2)* |
+| **Firestore** | Реальные demo state, proposals, events и execution traces |
 | **Cloud Logging** | Структурированный audit trail с correlation ID |
 | **Secret Manager** | Только учётные данные партнёра |
 | **IAM + ADC** | Аутентификация — без файлов ключей сервисного аккаунта |
 
-Этап 1 работает полностью локально с хранилищем в памяти и детерминированными агентами.
+При недоступности Gemini детерминированные controls продолжают работать. Real-agent
+режим использует ADC, FastAPI typed-tool boundary и изолированный namespace
+`productions/last-light-demo`.
 
 ---
 
@@ -117,9 +120,10 @@ StudioGrid AI — **не чат-бот**. Не генератор сценари
 
 ---
 
-## Локальная разработка (Этап 1)
+## Локальная разработка
 
-Аккаунт Google Cloud не требуется для Этапа 1.
+Для детерминированного режима аккаунт Google Cloud не нужен. Real-agent режим
+использует ADC проекта `studiogrid-ai`.
 
 **Backend:**
 ```bash
@@ -149,17 +153,29 @@ cd apps/web && npm test
 cd apps/web && npm run lint && npm run typecheck
 ```
 
+**Реальный локальный smoke milestone:**
+
+```bash
+gcloud auth application-default login
+python -m agents.google_adk.smoke_schedule
+```
+
+Команда проверяет реальные Gemini 3.6 Flash, Google ADK, FastAPI Tool Server,
+Firestore, получение proposal в API, явный human approval, изменение schedule и
+timeline audit. Она не выполняет deployment и не удаляет cloud-данные.
+
 ---
 
 ## Переменные среды
 
-Скопируйте `.env.example` в `.env.local`. Секреты для Этапа 1 не нужны.
+Скопируйте `.env.example` в `.env.local`. Real-agent режим использует ADC;
+никогда не помещайте сюда credentials, tokens или пути к service-account keys.
 
 ---
 
 ## IBM Bob
 
-Этот проект разрабатывается с использованием **IBM Bob** в качестве AI-ассистента разработки.
+Этап 1 был разработан и проверен с использованием **IBM Bob** в качестве AI-ассистента разработки.
 
 Все действия логируются в реальном времени:
 [docs/IBM_BOB_DEVELOPMENT_LOG.md](docs/IBM_BOB_DEVELOPMENT_LOG.md)
@@ -191,17 +207,17 @@ cd apps/web && npm run lint && npm run typecheck
 
 ## Соответствие требованиям конкурса
 
-- Реальный Gemini + Agent Builder: Этап 2 (до подачи заявки)
+- Реальный Gemini 3.6 Flash + Google ADK: локально проверены через Vertex AI
 - Доказательства разработки с IBM Bob: [docs/IBM_BOB_DEVELOPMENT_LOG.md](docs/IBM_BOB_DEVELOPMENT_LOG.md)
 - Никаких сторонних AI-моделей (OpenAI, Anthropic и др.)
 - Никаких секретов в Git
 - Human approval gates реализованы в коде
 - Интеграция с партнёром: NOT_CONFIGURED до подтверждения требований
 
-## Известные ограничения (Этап 1)
+## Известные ограничения
 
-- ИИ не подключён (`DEV MODE — AI NOT CONNECTED` отображается в UI)
-- Firestore не подключён (хранилище в памяти)
 - Интеграция с партнёром не настроена
-- Только одно производство (LAST LIGHT)
-- Cloud Run деплоймент ещё не выполнен
+- Agent Engine deployment ещё не создан
+- Реальный cloud smoke изолирован синтетическим namespace LAST LIGHT
+- Для deployment требуется Python 3.11+; workstation проверки использует Python
+  3.10 и получает предупреждение Google о скором завершении поддержки

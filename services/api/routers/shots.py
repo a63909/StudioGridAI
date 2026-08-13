@@ -7,7 +7,6 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
 from ..core.approval_gates import ApprovalRequiredError
-from ..core.tool_registry import ToolRegistry
 from ..domain.enums import OriginType
 from ..domain.models import Shot
 
@@ -45,8 +44,7 @@ async def get_shot(shot_id: str, request: Request):
 @router.post("/{shot_id}/start")
 async def start_shot(shot_id: str, body: StartShotRequest, request: Request):
     store = request.app.state.store
-    event_bus = request.app.state.event_bus
-    registry = ToolRegistry(store=store, event_bus=event_bus)
+    registry = request.app.state.registry
     import uuid
     try:
         shot = await registry.record_shot_started(
@@ -64,8 +62,7 @@ async def start_shot(shot_id: str, body: StartShotRequest, request: Request):
 @router.post("/{shot_id}/complete")
 async def complete_shot(shot_id: str, body: CompleteShotRequest, request: Request):
     store = request.app.state.store
-    event_bus = request.app.state.event_bus
-    registry = ToolRegistry(store=store, event_bus=event_bus)
+    registry = request.app.state.registry
     import uuid
     try:
         shot = await registry.record_shot_completed(

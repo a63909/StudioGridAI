@@ -317,6 +317,10 @@ export interface ScheduleProposal {
   affectedScenes: string[];
   risks: ProposalRisk[];
   confidence: number;
+  agentExecutionId: string | null;
+  correlationId: string | null;
+  modelName: string | null;
+  durationMs: number | null;
   createdAt: string;
   resolvedAt: string | null;
   resolvedBy: string | null;
@@ -465,15 +469,18 @@ export interface WrapReport {
 
 export interface AgentExecution {
   executionId: string;
+  correlationId: string;
   agentName: string;
-  model: string | null;
+  modelName: string | null;
+  eventId: string | null;
   startedAt: string;
   completedAt: string | null;
+  durationMs: number | null;
   toolCalls: ToolCallRecord[];
-  resultStatus: string;
+  status: string;
   errorCode: string | null;
-  correlationId: string;
-  evidenceRefs: string[];
+  evidenceReferences: string[];
+  shortRationale: string;
   mode: AgentMode;
 }
 

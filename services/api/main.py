@@ -11,8 +11,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
 from .core.event_bus import LocalEventBus
+from .core.tool_registry import ToolRegistry
 from .db.local_store import LocalStateStore
-from .routers import events, production, scenes, shots, schedule, continuity, risks, report
+from .routers import events, production, scenes, shots, schedule, continuity, risks, report, tools
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +25,7 @@ event_bus = LocalEventBus()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Load LAST LIGHT dataset on startup."""
+    persistence = None
     package_path = Path(__file__).parent.parent.parent / "demo" / "last_light" / "production_package.json"
     if package_path.exists():
         with open(package_path, encoding="utf-8") as f:
@@ -40,6 +42,36 @@ async def lifespan(app: FastAPI):
             days[idx] = updated_day
             store.production = store.production.model_copy(update={"shootDays": days})
 
+        if settings.STUDIOGRID_FIRESTORE_ENABLED:
+            from .db.firestore_store import FirestoreStateStore
+            from agents.google_adk.runtime import mark_runtime_error
+
+            try:
+                persistence = FirestoreStateStore(
+                    project_id=settings.GOOGLE_CLOUD_PROJECT,
+                    production_id=settings.STUDIOGRID_PRODUCTION_ID,
+                    database=settings.FIRESTORE_DATABASE,
+                )
+                await persistence.healthcheck()
+                await persistence.save_application_state(store)
+            except Exception as exc:
+                mark_runtime_error("FIRESTORE_UNAVAILABLE")
+                settings.STUDIOGRID_AI_ENABLED = False
+                logger.error(
+                    "firestore_startup_failed",
+                    extra={"errorCode": type(exc).__name__},
+                )
+                if persistence is not None:
+                    await persistence.close()
+                persistence = None
+
+        app.state.persistence = persistence
+        app.state.registry = ToolRegistry(
+            store=store,
+            event_bus=event_bus,
+            persistence=persistence,
+        )
+
         # Wire up orchestrator
         from agents.orchestrator import ProductionOrchestrator
         orchestrator = ProductionOrchestrator(store=store, event_bus=event_bus)
@@ -50,13 +82,15 @@ async def lifespan(app: FastAPI):
         logger.warning("last_light_dataset_not_found", extra={"path": str(package_path)})
 
     yield
+    if persistence is not None:
+        await persistence.close()
     logger.info("studiogrid_api_shutdown")
 
 
 app = FastAPI(
     title="StudioGrid AI — Tool Server",
-    description="Production control system for film shoots. Phase 1: DEV MODE.",
-    version="0.1.0",
+    description="Production control system for film shoots. Phase 2: Real Gemini AI.",
+    version="2.0.0",
     lifespan=lifespan,
 )
 
@@ -71,6 +105,8 @@ app.add_middleware(
 # Inject shared state into routers
 app.state.store = store
 app.state.event_bus = event_bus
+app.state.persistence = None
+app.state.registry = ToolRegistry(store=store, event_bus=event_bus)
 
 # Register routers
 app.include_router(production.router, prefix="/production", tags=["production"])
@@ -81,13 +117,34 @@ app.include_router(continuity.router, prefix="/continuity", tags=["continuity"])
 app.include_router(risks.router, prefix="/risks", tags=["risks"])
 app.include_router(report.router, prefix="/report", tags=["report"])
 app.include_router(events.router, prefix="/events", tags=["events"])
+app.include_router(tools.router, prefix="/tools", tags=["agent-tools"])
 
 
 @app.get("/health")
 async def health():
+    """Health check — includes real AI runtime status."""
+    ai_enabled = settings.STUDIOGRID_AI_ENABLED
+
+    runtime_status = {"adkRuntime": "NOT_CONNECTED", "geminiStatus": "NOT_CONNECTED"}
+    try:
+        import agents.google_adk.runtime as rt
+        runtime_status = rt.get_runtime_status()
+    except Exception:
+        pass
+
     return {
         "status": "ok",
-        "agentMode": "DEV",
-        "aiConnected": False,
+        "version": "2.0.0",
+        "agentMode": "PRODUCTION" if ai_enabled else "DEV",
+        "aiEnabled": ai_enabled,
+        "aiRuntime": runtime_status.get("adkRuntime", "NOT_CONNECTED"),
+        "geminiStatus": runtime_status.get("geminiStatus", "NOT_CONNECTED"),
+        "lastExecutionId": runtime_status.get("lastExecutionId"),
+        "modelName": runtime_status.get("modelName", settings.GEMINI_MODEL),
+        "connectionErrorCode": runtime_status.get("connectionErrorCode"),
+        "modelLocation": runtime_status.get("modelLocation", settings.GOOGLE_CLOUD_LOCATION),
+        "firestoreStatus": (
+            "CONNECTED" if app.state.persistence is not None else "NOT_CONNECTED"
+        ),
         "partnerStatus": "NOT_CONFIGURED",
     }

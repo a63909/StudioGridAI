@@ -5,6 +5,73 @@ import { useTranslations } from "next-intl";
 import type { ScheduleProposal } from "@/lib/types/domain";
 import { apiClient } from "@/lib/api/client";
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Proposal Trace Metadata (expandable — no chain-of-thought)
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface ProposalTraceProps {
+  proposal: ScheduleProposal;
+}
+
+function ProposalTrace({ proposal }: ProposalTraceProps) {
+  const t = useTranslations("aiRuntime");
+  const [expanded, setExpanded] = useState(false);
+
+  const isAIGenerated = Boolean(proposal.agentExecutionId);
+
+  if (!isAIGenerated) return null;
+
+  return (
+    <div className="mt-3 border-t border-neutral-700 pt-3">
+      <button
+        className="text-xs text-blue-400 hover:text-blue-300 font-mono"
+        onClick={() => setExpanded((v) => !v)}
+        aria-expanded={expanded}
+      >
+        {expanded ? t("hideTrace") : t("explain")}
+      </button>
+
+      {expanded && (
+        <div className="mt-2 bg-neutral-800 rounded p-3 space-y-1 text-xs font-mono">
+          <div className="text-neutral-400 font-semibold mb-2">{t("traceTitle")}</div>
+          <div>
+            <span className="text-neutral-500">{t("agent")}: </span>
+            <span className="text-neutral-200">{proposal.originAgent}</span>
+          </div>
+          <div>
+            <span className="text-neutral-500">{t("executionId")}: </span>
+            <span className="text-neutral-400 break-all">{proposal.agentExecutionId}</span>
+          </div>
+          <div>
+            <span className="text-neutral-500">{t("model")}: </span>
+            <span className="text-neutral-200">{proposal.modelName ?? "—"}</span>
+          </div>
+          {proposal.evidence.length > 0 && (
+            <div>
+              <div className="text-neutral-500 mb-1">{t("evidence")}:</div>
+              {proposal.evidence.map((e) => (
+                <div key={e.evidenceId} className="text-neutral-400 ml-2 leading-relaxed">
+                  • {e.evidenceType}: {e.description}
+                </div>
+              ))}
+            </div>
+          )}
+          <div>
+            <span className="text-neutral-500">{t("duration")}: </span>
+            <span className="text-neutral-400">
+              {proposal.durationMs == null ? "—" : `${proposal.durationMs} ${t("ms")}`}
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Proposal Card
+// ─────────────────────────────────────────────────────────────────────────────
+
 interface ProposalCardProps {
   proposal: ScheduleProposal;
   onApprove: (id: string) => Promise<void>;
@@ -13,6 +80,7 @@ interface ProposalCardProps {
 
 function ProposalCard({ proposal, onApprove, onReject }: ProposalCardProps) {
   const t = useTranslations("proposal");
+  const tc = useTranslations("common");
   const [confirming, setConfirming] = useState<"approve" | "reject" | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -99,7 +167,7 @@ function ProposalCard({ proposal, onApprove, onReject }: ProposalCardProps) {
                 {loading ? "..." : t("approve")}
               </button>
               <button className="btn-ghost text-sm" onClick={() => setConfirming(null)}>
-                Cancel
+                {tc("cancel")}
               </button>
             </div>
           ) : confirming === "reject" ? (
@@ -118,7 +186,7 @@ function ProposalCard({ proposal, onApprove, onReject }: ProposalCardProps) {
                 {loading ? "..." : t("reject")}
               </button>
               <button className="btn-ghost text-sm" onClick={() => setConfirming(null)}>
-                Cancel
+                {tc("cancel")}
               </button>
             </div>
           ) : (
@@ -154,9 +222,16 @@ function ProposalCard({ proposal, onApprove, onReject }: ProposalCardProps) {
           {proposal.status} — {proposal.resolvedBy}
         </div>
       )}
+
+      {/* AI Execution Trace (expandable — no chain-of-thought) */}
+      <ProposalTrace proposal={proposal} />
     </div>
   );
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Schedule Proposal List
+// ─────────────────────────────────────────────────────────────────────────────
 
 export function ScheduleProposalList() {
   const t = useTranslations("schedule");

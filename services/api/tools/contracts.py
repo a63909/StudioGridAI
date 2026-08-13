@@ -29,6 +29,7 @@ from ..domain.enums import (
     Severity,
 )
 from ..domain.models import (
+    AgentExecution,
     ContinuityFact,
     Evidence,
     ProposalRisk,
@@ -133,6 +134,12 @@ TOOL_REGISTRY_META: dict[str, ToolMeta] = {
         description="Create a schedule change proposal. Requires human approval to take effect.",
         allowed_callers=[OriginType.AGENT, OriginType.HUMAN],
         requires_human_approval=False,  # creating is allowed; approving is not
+    ),
+    "record_agent_execution": ToolMeta(
+        name="record_agent_execution",
+        description="Persist a safe operational agent trace without chain-of-thought.",
+        allowed_callers=[OriginType.AGENT, OriginType.SYSTEM],
+        requires_human_approval=False,
     ),
     "approve_schedule_proposal": ToolMeta(
         name="approve_schedule_proposal",
@@ -274,7 +281,7 @@ class ResolveCoverageAlertInput(BaseModel):
 
 class CreateScheduleProposalInput(BaseModel):
     shootDayId: str
-    proposedChanges: list[ScheduleChange]
+    proposedChanges: list[ScheduleChange] = Field(min_length=1)
     why: str
     evidence: list[Evidence]
     expectedBenefitMinutes: int
@@ -325,3 +332,27 @@ class WrapShootDayInput(BaseModel):
 
 class GenerateWrapReportInput(BaseModel):
     shootDayId: str
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# FastAPI agent tool server envelopes
+# ─────────────────────────────────────────────────────────────────────────────
+
+class AgentCreateScheduleProposalRequest(BaseModel):
+    callerId: str = "SCHEDULE_AGENT"
+    correlationId: str
+    executionId: str
+    input: CreateScheduleProposalInput
+
+
+class AgentCreateCoverageAlertRequest(BaseModel):
+    callerId: str = "COVERAGE_AGENT"
+    correlationId: str
+    shootDayId: str
+    input: CreateCoverageAlertInput
+
+
+class AgentExecutionRequest(BaseModel):
+    callerId: str
+    correlationId: str
+    execution: AgentExecution

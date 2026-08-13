@@ -1,25 +1,27 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { AIRuntimeStatus } from "./AIRuntimeStatus";
 
 /**
- * DEV MODE banner — always visible in Phase 1.
- * Clearly communicates that AI is not connected.
- * Must never be removed unless real Gemini inference is active.
+ * Runtime banner — shows AI status.
+ * DEV MODE: when STUDIOGRID_AI_ENABLED=0
+ * Shows real AI Runtime status when enabled.
  */
 export function DevModeBanner() {
   const t = useTranslations("devMode");
 
   return (
-    <div className="dev-mode-banner px-4 py-2 flex items-center justify-between text-sm">
+    <div className="runtime-banner px-4 py-2 flex items-center justify-between text-sm">
       <div className="flex items-center gap-3">
-        <span className="font-mono font-bold text-orange-300 tracking-wide">
-          ⚠ {t("banner")}
+        <span className="font-mono font-bold text-blue-300 tracking-wide">
+          {t("banner")}
         </span>
-        <span className="text-orange-400 hidden sm:inline">{t("description")}</span>
+        <span className="text-neutral-400 hidden sm:inline">{t("description")}</span>
       </div>
-      <div className="flex items-center gap-4 text-orange-400 text-xs">
-        <span>
+      <div className="flex items-center gap-4 text-xs">
+        <AIRuntimeStatus />
+        <span className="text-orange-400">
           {t("partnerStatus")}: <span className="font-mono font-semibold">NOT_CONFIGURED</span>
         </span>
       </div>

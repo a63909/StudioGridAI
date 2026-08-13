@@ -9,11 +9,27 @@
     "report": "End-of-Day Report"
   },
   "devMode": {
-    "banner": "DEV MODE — AI NOT CONNECTED",
-    "description": "Phase 1: Deterministic agents. Gemini + Agent Builder integration is Phase 2.",
+    "banner": "STUDIOGRID AI RUNTIME",
+    "description": "Live status from the FastAPI Tool Server.",
     "agentMode": "Agent Mode",
     "aiStatus": "AI Status",
     "partnerStatus": "Partner Integration"
+  },
+  "aiRuntime": {
+    "label": "AI Runtime",
+    "connected": "CONNECTED",
+    "error": "ERROR",
+    "notConnected": "NOT CONNECTED",
+    "model": "Model",
+    "agent": "Agent",
+    "executionId": "Execution ID",
+    "evidence": "Evidence",
+    "duration": "Duration",
+    "ms": "ms",
+    "traceTitle": "AI Execution Trace",
+    "showTrace": "Show Trace",
+    "hideTrace": "Hide Trace",
+    "explain": "EXPLAIN"
   },
   "partnerIntegration": {
     "notConfigured": "NOT CONFIGURED",

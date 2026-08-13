@@ -23,6 +23,7 @@ from ..domain.enums import (
 from ..domain.events import ProductionEvent
 from ..domain.models import (
     Actor,
+    AgentExecution,
     ContinuityAlert,
     ContinuityFact,
     CoverageAlert,
@@ -56,6 +57,7 @@ class LocalStateStore:
         self.scenes: dict[str, Scene] = {}
         self.shots: dict[str, Shot] = {}
         self.events: list[ProductionEvent] = []
+        self.agent_executions: dict[str, AgentExecution] = {}
         self.proposals: dict[str, ScheduleProposal] = {}
         self.continuity_facts: dict[str, ContinuityFact] = {}
         self.continuity_alerts: dict[str, ContinuityAlert] = {}
@@ -131,6 +133,12 @@ class LocalStateStore:
     def get_events(self) -> list[ProductionEvent]:
         return list(self.events)
 
+    def upsert_agent_execution(self, execution: AgentExecution) -> None:
+        self.agent_executions[execution.executionId] = execution
+
+    def get_agent_execution(self, execution_id: str) -> AgentExecution | None:
+        return self.agent_executions.get(execution_id)
+
     # ─────────────────────────────────────────────────────────────────────────
     # Upserts
     # ─────────────────────────────────────────────────────────────────────────
@@ -183,14 +191,21 @@ class LocalStateStore:
 
     def compute_scene_status(self, scene_id: str) -> SceneStatus:
         """Derive scene status from shot state and dependency state."""
+        return self._compute_scene_status(scene_id, set())
+
+    def _compute_scene_status(self, scene_id: str, visiting: set[str]) -> SceneStatus:
+        """Dependency-aware status calculation with cycle protection."""
         scene = self.scenes.get(scene_id)
         if scene is None:
             return SceneStatus.PLANNED
+        if scene_id in visiting:
+            return SceneStatus.BLOCKED
+        visiting = {*visiting, scene_id}
 
         # Check dependencies
         for dep in scene.dependencies:
             dep_scene = self.scenes.get(dep.dependsOnSceneId)
-            if dep_scene and dep_scene.status != SceneStatus.COMPLETE:
+            if dep_scene and self._compute_scene_status(dep.dependsOnSceneId, visiting) != SceneStatus.COMPLETE:
                 return SceneStatus.BLOCKED
 
         scene_shots = [s for s in self.shots.values() if s.sceneId == scene_id]

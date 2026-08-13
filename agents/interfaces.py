@@ -1,7 +1,7 @@
 """Abstract agent interfaces for StudioGrid AI.
 
 Phase 1: Deterministic implementations behind these interfaces.
-Phase 2: Real Gemini + Agent Builder implementations replace internals.
+Phase 2: Real Gemini + Google ADK implementations replace internals.
 
 The interface contract does not change between phases.
 """
@@ -17,7 +17,7 @@ class BaseAgent(ABC):
     """Abstract base for all StudioGrid AI agents.
 
     In Phase 1 (DEV mode): deterministic logic.
-    In Phase 2 (PRODUCTION mode): real Gemini/Agent Builder inference.
+    In Phase 2 (PRODUCTION mode): real Gemini/Google ADK inference.
 
     The tool contracts and state mutation paths are identical in both phases.
     """

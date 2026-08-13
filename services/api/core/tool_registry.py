@@ -54,9 +54,24 @@ class ToolNotFoundError(Exception):
 class ToolRegistry:
     """Executes tool calls with full authorization, approval, and audit chain."""
 
-    def __init__(self, store: Any, event_bus: LocalEventBus) -> None:
+    def __init__(self, store: Any, event_bus: LocalEventBus, persistence: Any | None = None) -> None:
         self._store = store
         self._event_bus = event_bus
+        self._persistence = persistence
+
+    async def _record_event(self, event: ProductionEvent) -> None:
+        self._store.add_event(event)
+        if self._persistence is not None:
+            await self._persistence.save_event(event)
+        await self._event_bus.publish(event)
+
+    async def _persist_state(self) -> None:
+        if self._persistence is not None:
+            await self._persistence.save_application_state(self._store)
+
+    async def _persist_proposal(self, proposal: ScheduleProposal) -> None:
+        if self._persistence is not None:
+            await self._persistence.save_proposal(proposal)
 
     def _authorize(self, tool_name: str, caller_type: OriginType) -> None:
         """Check that the caller is allowed to use this tool."""
@@ -95,8 +110,7 @@ class ToolRegistry:
             source="tool_registry",
             correlationId=correlation_id,
         )
-        self._store.add_event(event)
-        await self._event_bus.publish(event)
+        await self._record_event(event)
 
     # ─────────────────────────────────────────────────────────────────────────
     # Shot tools
@@ -123,6 +137,7 @@ class ToolRegistry:
             "startedAt": started_at or datetime.utcnow(),
         })
         self._store.upsert_shot(updated)
+        await self._persist_state()
 
         day = self._store.get_active_shoot_day()
         if day and self._store.production:
@@ -136,8 +151,7 @@ class ToolRegistry:
                 source=caller_id,
                 correlationId=correlation_id,
             )
-            self._store.add_event(event)
-            await self._event_bus.publish(event)
+            await self._record_event(event)
 
         await self._audit(tool, caller_type, caller_id, {"shotId": shot_id}, None, "OK", correlation_id)
         return updated
@@ -165,6 +179,7 @@ class ToolRegistry:
             "actualDurationMinutes": actual_duration_minutes,
         })
         self._store.upsert_shot(updated)
+        await self._persist_state()
 
         day = self._store.get_active_shoot_day()
         if day and self._store.production:
@@ -178,8 +193,7 @@ class ToolRegistry:
                 source=caller_id,
                 correlationId=correlation_id,
             )
-            self._store.add_event(event)
-            await self._event_bus.publish(event)
+            await self._record_event(event)
 
         await self._audit(tool, caller_type, caller_id, {"shotId": shot_id}, None, "OK", correlation_id)
         return updated
@@ -211,6 +225,7 @@ class ToolRegistry:
         })
         self._store.upsert_actor(updated)
         self._store.add_delay_minutes(delay_minutes)
+        await self._persist_state()
 
         if self._store.production:
             event = ProductionEvent(
@@ -228,8 +243,7 @@ class ToolRegistry:
                 source=caller_id,
                 correlationId=correlation_id,
             )
-            self._store.add_event(event)
-            await self._event_bus.publish(event)
+            await self._record_event(event)
 
         await self._audit(tool, caller_type, caller_id, {"actorId": actor_id, "delayMinutes": delay_minutes}, None, "OK", correlation_id)
         return updated
@@ -254,6 +268,7 @@ class ToolRegistry:
             "delayMinutes": 0,
         })
         self._store.upsert_actor(updated)
+        await self._persist_state()
 
         if self._store.production:
             event = ProductionEvent(
@@ -266,8 +281,7 @@ class ToolRegistry:
                 source=caller_id,
                 correlationId=correlation_id,
             )
-            self._store.add_event(event)
-            await self._event_bus.publish(event)
+            await self._record_event(event)
 
         await self._audit(tool, caller_type, caller_id, {"actorId": actor_id}, None, "OK", correlation_id)
         return updated
@@ -299,8 +313,7 @@ class ToolRegistry:
                 source=caller_id,
                 correlationId=correlation_id,
             )
-            self._store.add_event(event)
-            await self._event_bus.publish(event)
+            await self._record_event(event)
 
         await self._audit(tool, caller_type, caller_id, {"factId": fact.factId}, None, "OK", correlation_id)
         return fact
@@ -328,8 +341,7 @@ class ToolRegistry:
                 source=caller_id,
                 correlationId=correlation_id,
             )
-            self._store.add_event(event)
-            await self._event_bus.publish(event)
+            await self._record_event(event)
 
         await self._audit(tool, caller_type, caller_id, {"alertId": alert.alertId}, None, "OK", correlation_id)
         return alert
@@ -348,7 +360,28 @@ class ToolRegistry:
     ) -> CoverageAlert:
         tool = "create_coverage_alert"
         self._authorize(tool, caller_type)
+        if alert.sceneId not in self._store.scenes:
+            raise ValueError(f"Scene {alert.sceneId} not found")
+        if not alert.missingShotIds:
+            raise ValueError("Coverage alert requires at least one missing planned shot")
+        invalid_shots = [shot_id for shot_id in alert.missingShotIds if shot_id not in self._store.shots]
+        if invalid_shots:
+            raise ValueError(f"Unknown shot IDs: {invalid_shots}")
+        wrong_scene = [
+            shot_id for shot_id in alert.missingShotIds
+            if self._store.shots[shot_id].sceneId != alert.sceneId
+        ]
+        if wrong_scene:
+            raise ValueError(f"Shots do not belong to scene {alert.sceneId}: {wrong_scene}")
+        completed = [
+            shot_id for shot_id in alert.missingShotIds
+            if self._store.shots[shot_id].status == ShotStatus.COMPLETE
+        ]
+        if completed:
+            raise ValueError(f"Completed shots cannot be reported missing: {completed}")
         self._store.upsert_coverage_alert(alert)
+        if self._persistence is not None:
+            await self._persistence.save_coverage_alert(alert)
 
         if self._store.production:
             event = ProductionEvent(
@@ -361,8 +394,7 @@ class ToolRegistry:
                 source=caller_id,
                 correlationId=correlation_id,
             )
-            self._store.add_event(event)
-            await self._event_bus.publish(event)
+            await self._record_event(event)
 
         await self._audit(tool, caller_type, caller_id, {"alertId": alert.alertId}, None, "OK", correlation_id)
         return alert
@@ -381,7 +413,18 @@ class ToolRegistry:
     ) -> ScheduleProposal:
         tool = "create_schedule_proposal"
         self._authorize(tool, caller_type)
+        if caller_type == OriginType.AGENT and proposal.originAgent != caller_id:
+            raise ToolAuthorizationError(tool, caller_type)
+        if proposal.status != ProposalStatus.PENDING:
+            raise ValueError("Agents may only create PENDING schedule proposals")
+        unknown_scenes = [
+            change.sceneId for change in proposal.proposedChanges
+            if change.sceneId not in self._store.scenes
+        ]
+        if unknown_scenes:
+            raise ValueError(f"Unknown proposal scene IDs: {unknown_scenes}")
         self._store.upsert_proposal(proposal)
+        await self._persist_proposal(proposal)
 
         if self._store.production:
             event = ProductionEvent(
@@ -394,8 +437,7 @@ class ToolRegistry:
                 source=caller_id,
                 correlationId=correlation_id,
             )
-            self._store.add_event(event)
-            await self._event_bus.publish(event)
+            await self._record_event(event)
 
         await self._audit(tool, caller_type, caller_id, {"proposalId": proposal.proposalId}, None, "OK", correlation_id)
         return proposal
@@ -429,6 +471,8 @@ class ToolRegistry:
         # Apply the schedule changes
         self._apply_schedule_changes(proposal, shoot_day_id)
         self._store.add_recovered_minutes(proposal.expectedBenefitMinutes)
+        await self._persist_state()
+        await self._persist_proposal(updated)
 
         if self._store.production:
             event = ProductionEvent(
@@ -445,8 +489,7 @@ class ToolRegistry:
                 source=caller_id,
                 correlationId=correlation_id,
             )
-            self._store.add_event(event)
-            await self._event_bus.publish(event)
+            await self._record_event(event)
 
         await self._audit(tool, caller_type, caller_id, {"proposalId": proposal_id, "approvedBy": approved_by}, None, "OK", correlation_id)
         return updated
@@ -475,6 +518,7 @@ class ToolRegistry:
             "resolvedBy": rejected_by,
         })
         self._store.upsert_proposal(updated)
+        await self._persist_proposal(updated)
 
         if self._store.production:
             event = ProductionEvent(
@@ -487,8 +531,7 @@ class ToolRegistry:
                 source=caller_id,
                 correlationId=correlation_id,
             )
-            self._store.add_event(event)
-            await self._event_bus.publish(event)
+            await self._record_event(event)
 
         await self._audit(tool, caller_type, caller_id, {"proposalId": proposal_id}, None, "OK", correlation_id)
         return updated
@@ -517,6 +560,39 @@ class ToolRegistry:
         self._store.update_schedule_order(shoot_day_id, current_schedule)
 
     # ─────────────────────────────────────────────────────────────────────────
+    # Safe AI execution trace tool
+    # ─────────────────────────────────────────────────────────────────────────
+
+    async def record_agent_execution(
+        self,
+        execution: AgentExecution,
+        caller_type: OriginType,
+        caller_id: str,
+        correlation_id: str,
+    ) -> AgentExecution:
+        tool = "record_agent_execution"
+        self._authorize(tool, caller_type)
+        if caller_type == OriginType.AGENT and execution.agentName != caller_id:
+            raise ToolAuthorizationError(tool, caller_type)
+        if execution.correlationId != correlation_id:
+            raise ValueError("Execution correlationId does not match tool envelope")
+
+        self._store.upsert_agent_execution(execution)
+        if self._persistence is not None:
+            await self._persistence.save_agent_execution(execution)
+
+        await self._audit(
+            tool,
+            caller_type,
+            caller_id,
+            {"executionId": execution.executionId, "status": execution.status},
+            {"stored": True},
+            "OK",
+            correlation_id,
+        )
+        return execution
+
+    # ─────────────────────────────────────────────────────────────────────────
     # Risk tools
     # ─────────────────────────────────────────────────────────────────────────
 
@@ -543,8 +619,7 @@ class ToolRegistry:
                 source=caller_id,
                 correlationId=correlation_id,
             )
-            self._store.add_event(event)
-            await self._event_bus.publish(event)
+            await self._record_event(event)
 
         await self._audit(tool, caller_type, caller_id, {"riskId": risk.riskId}, None, "OK", correlation_id)
         return risk
@@ -587,8 +662,7 @@ class ToolRegistry:
                 source=caller_id,
                 correlationId=correlation_id,
             )
-            self._store.add_event(event)
-            await self._event_bus.publish(event)
+            await self._record_event(event)
 
         await self._audit(tool, caller_type, caller_id, {"riskId": risk_id}, None, "OK", correlation_id)
         return updated

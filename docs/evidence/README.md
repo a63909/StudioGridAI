@@ -25,7 +25,7 @@ Real Gemini execution traces (Phase 2).
 - No API keys, no private data
 
 ### `agent_builder/`
-Google Cloud Agent Builder execution logs (Phase 2).
+Google ADK / Vertex AI Agent Engine execution logs (Phase 2).
 - Agent run records
 - Tool call sequences
 - Correlation IDs

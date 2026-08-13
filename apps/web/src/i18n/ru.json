@@ -9,11 +9,27 @@
     "report": "Итоговый отчёт"
   },
   "devMode": {
-    "banner": "РЕЖИМ РАЗРАБОТКИ — ИИ НЕ ПОДКЛЮЧЁН",
-    "description": "Этап 1: детерминированные агенты. Интеграция Gemini + Agent Builder — Этап 2.",
+    "banner": "СРЕДА ВЫПОЛНЕНИЯ STUDIOGRID AI",
+    "description": "Актуальный статус от FastAPI Tool Server.",
     "agentMode": "Режим агентов",
     "aiStatus": "Статус ИИ",
     "partnerStatus": "Интеграция партнёра"
+  },
+  "aiRuntime": {
+    "label": "Среда выполнения ИИ",
+    "connected": "ПОДКЛЮЧЕНО",
+    "error": "ОШИБКА",
+    "notConnected": "НЕ ПОДКЛЮЧЕНО",
+    "model": "Модель",
+    "agent": "Агент",
+    "executionId": "ID выполнения",
+    "evidence": "Доказательства",
+    "duration": "Длительность",
+    "ms": "мс",
+    "traceTitle": "Трассировка ИИ",
+    "showTrace": "Показать трассировку",
+    "hideTrace": "Скрыть трассировку",
+    "explain": "ОБЪЯСНИТЬ"
   },
   "partnerIntegration": {
     "notConfigured": "НЕ НАСТРОЕНО",

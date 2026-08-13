@@ -2,15 +2,12 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
 
 from fastapi import APIRouter, HTTPException, Request
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from ..core.approval_gates import ApprovalRequiredError
-from ..core.tool_registry import ToolRegistry
-from ..domain.enums import OriginType, ProposalCategory, Severity
-from ..domain.models import Evidence, ProposalRisk, ScheduleChange, ScheduleProposal
+from ..domain.enums import OriginType
 
 router = APIRouter()
 
@@ -53,14 +50,23 @@ async def get_schedule(request: Request):
 @router.get("/proposals")
 async def get_proposals(request: Request):
     store = request.app.state.store
-    return [p.model_dump() for p in store.proposals.values()]
+    proposals = []
+    for proposal in store.proposals.values():
+        trace = (
+            store.get_agent_execution(proposal.agentExecutionId)
+            if proposal.agentExecutionId else None
+        )
+        enriched = proposal.model_copy(
+            update={"durationMs": trace.durationMs if trace else proposal.durationMs}
+        )
+        proposals.append(enriched.model_dump(mode="json"))
+    return proposals
 
 
 @router.post("/actor-delay")
 async def report_actor_delay(body: ActorDelayRequest, request: Request):
     store = request.app.state.store
-    event_bus = request.app.state.event_bus
-    registry = ToolRegistry(store=store, event_bus=event_bus)
+    registry = request.app.state.registry
     day = store.get_active_shoot_day()
     if day is None:
         raise HTTPException(status_code=400, detail="No active shoot day")
@@ -82,8 +88,7 @@ async def report_actor_delay(body: ActorDelayRequest, request: Request):
 @router.post("/actor-available")
 async def report_actor_available(body: ActorAvailableRequest, request: Request):
     store = request.app.state.store
-    event_bus = request.app.state.event_bus
-    registry = ToolRegistry(store=store, event_bus=event_bus)
+    registry = request.app.state.registry
     day = store.get_active_shoot_day()
     if day is None:
         raise HTTPException(status_code=400, detail="No active shoot day")
@@ -103,8 +108,7 @@ async def report_actor_available(body: ActorAvailableRequest, request: Request):
 @router.post("/proposals/{proposal_id}/approve")
 async def approve_proposal(proposal_id: str, body: ApproveProposalRequest, request: Request):
     store = request.app.state.store
-    event_bus = request.app.state.event_bus
-    registry = ToolRegistry(store=store, event_bus=event_bus)
+    registry = request.app.state.registry
     day = store.get_active_shoot_day()
     if day is None:
         raise HTTPException(status_code=400, detail="No active shoot day")
@@ -125,8 +129,7 @@ async def approve_proposal(proposal_id: str, body: ApproveProposalRequest, reque
 @router.post("/proposals/{proposal_id}/reject")
 async def reject_proposal(proposal_id: str, body: RejectProposalRequest, request: Request):
     store = request.app.state.store
-    event_bus = request.app.state.event_bus
-    registry = ToolRegistry(store=store, event_bus=event_bus)
+    registry = request.app.state.registry
     day = store.get_active_shoot_day()
     if day is None:
         raise HTTPException(status_code=400, detail="No active shoot day")

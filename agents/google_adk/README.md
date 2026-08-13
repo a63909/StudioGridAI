@@ -1,87 +1,37 @@
-# Google Cloud Agent Builder Integration
+# Google ADK runtime
 
-## Status: Phase 2 — NOT YET IMPLEMENTED
+This package contains the real StudioGrid AI Google runtime:
 
-This directory will contain the real Google Cloud Agent Builder / Gemini integration.
+- `PRODUCTION_ORCHESTRATOR`: Google ADK `SequentialAgent` root.
+- `SCHEDULE_AGENT`: Gemini 3.6 Flash specialist with only
+  `create_schedule_proposal`.
+- `COVERAGE_AGENT`: Gemini 3.6 Flash specialist with only
+  `create_coverage_alert`.
+- FastAPI typed-tool gateway; agents never access Firestore directly.
+- Safe operational traces without chain-of-thought.
 
-The Phase 1 placeholder is in `adk_adapter.py`.
+Verified configuration (2026-08-13):
 
----
-
-## Prerequisites Before Phase 2 Implementation
-
-### 1. Verify Current SDK
-
-**Do not use API method names from memory or training data.**
-The Agent Builder / Vertex AI Agents API changes frequently.
-
-Before writing any code:
-- Check the current official documentation at cloud.google.com
-- Verify the current Python SDK package name and version
-- Create `docs/adr/005-agent-builder-integration.md` recording the verified integration approach
-
-### 2. Google Cloud Project
-
-```bash
-export GOOGLE_CLOUD_PROJECT=your-project-id
+```text
+project: studiogrid-ai
+model: gemini-3.6-flash
+model endpoint: global
+Agent Engine region: europe-west3
+Firestore database: (default)
+demo namespace: productions/last-light-demo
+authentication: Application Default Credentials
 ```
 
-### 3. Application Default Credentials
+Run the full local smoke after ADC is configured:
 
-**No service account JSON key files.**
-
-For local development:
-```bash
-gcloud auth application-default login
+```powershell
+python -m agents.google_adk.smoke_schedule
 ```
 
-For Cloud Run: attach a service account with least-privilege IAM roles.
+The command starts a local FastAPI server, performs two real actor-delay
+scenarios (Maya Reed and Daniel Osei), verifies typed tool calls, Firestore,
+human approval, schedule mutation, and timeline audit, then stops the server.
+It does not deploy or delete any cloud data.
 
-### 4. Enable APIs
-
-```bash
-gcloud services enable aiplatform.googleapis.com
-gcloud services enable firestore.googleapis.com
-gcloud services enable run.googleapis.com
-gcloud services enable logging.googleapis.com
-gcloud services enable storage.googleapis.com
-gcloud services enable secretmanager.googleapis.com
-```
-
-Verify the current Agent Builder API identifier before enabling it.
-
-### 5. IAM Roles for Cloud Run Service Account
-
-```
-roles/aiplatform.user      — Gemini inference
-roles/datastore.user       — Firestore read/write
-roles/logging.logWriter    — Cloud Logging
-roles/storage.objectViewer — Cloud Storage
-```
-
----
-
-## Phase 2 Architecture
-
-```
-Agent Builder Runtime
-  └── PRODUCTION_ORCHESTRATOR (Gemini model)
-        ├── tool declarations → FastAPI Tool Server
-        ├── SCHEDULE_AGENT (Gemini model)
-        ├── COVERAGE_AGENT (Gemini model)
-        ├── CONTINUITY_AGENT (Gemini model)
-        ├── PRODUCTION_RISK_AGENT (Gemini model)
-        └── WRAP_REPORT_AGENT (deterministic, no model needed)
-```
-
-FastAPI Tool Server receives authenticated calls from Agent Builder.
-All tool calls pass through: schema validation → authorization → approval gate → audit.
-
----
-
-## UI Mode Indicator
-
-Phase 1: `DEV MODE — AI NOT CONNECTED`
-Phase 2: `PRODUCTION — Gemini [model-version]`
-
-The UI always shows current mode honestly.
+Architecture and official sources are recorded in
+`docs/adr/005-google-agent-runtime-integration.md`.

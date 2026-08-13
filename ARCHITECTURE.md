@@ -22,9 +22,9 @@ consequences, and proposes next best actions — always subject to human approva
 └──────────┬──────────────────────────┬───────────────────────┘
            │ tool calls only          │ ADC (no key files)
 ┌──────────▼──────────┐   ┌──────────▼───────────────────────┐
-│  Agent Builder      │   │  Firestore (Phase 2)             │
-│  Gemini Orchestrator│   │  Cloud Logging                   │
-│  (Phase 2)          │   │  Secret Manager                  │
+│  Google ADK         │   │  Firestore                       │
+│  Gemini 3.6 Flash   │   │  Cloud Logging / Trace           │
+│  Orchestrator       │   │  Secret Manager                  │
 │                     │   │  Cloud Storage                   │
 │  SCHEDULE_AGENT     │   └──────────────────────────────────┘
 │  COVERAGE_AGENT     │
@@ -80,7 +80,8 @@ The Event Bus dispatches to all subscribed agents. Events are immutable.
 | Service | Purpose |
 |---------|---------|
 | Gemini | LLM inference for all agents |
-| Agent Builder | Official agent runtime / orchestration |
+| Google ADK | Real local multi-agent orchestration |
+| Vertex AI Agent Engine | Prepared `AdkApp`; deployment pending IAM confirmation |
 | Cloud Run | FastAPI tool server + Next.js frontend |
 | Firestore | Production state storage |
 | Cloud Logging | Structured audit trail with correlation IDs |
@@ -94,9 +95,9 @@ The Event Bus dispatches to all subscribed agents. Events are immutable.
 |-----------|---------|---------|
 | Domain model | ✅ Complete | ✅ |
 | Event system | ✅ LocalEventBus | Cloud Pub/Sub |
-| Agents | ✅ Deterministic | Real Gemini + Agent Builder |
-| State store | ✅ In-memory | Firestore |
-| Dashboard | ✅ DEV MODE | Live AI |
+| Agents | ✅ Deterministic | ✅ Real Gemini 3.6 Flash + Google ADK |
+| State store | ✅ In-memory | ✅ Firestore durable mirror |
+| Dashboard | ✅ Deterministic status | ✅ Honest live runtime status |
 | Cloud Run | ❌ | ✅ |
 | Partner integration | NOT_CONFIGURED | TBD after requirement confirmed |
 
@@ -105,6 +106,7 @@ The Event Bus dispatches to all subscribed agents. Events are immutable.
 - [ADR 001 — Event-Driven State](docs/adr/001-event-driven-state.md)
 - [ADR 002 — Agent Interfaces](docs/adr/002-agent-interfaces.md)
 - [ADR 003 — Human Approval Gates](docs/adr/003-human-approval-gates.md)
+- [ADR 005 — Google ADK and Vertex AI Agent Runtime](docs/adr/005-google-agent-runtime-integration.md)
 
 ## Demo Film
 

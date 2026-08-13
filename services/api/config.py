@@ -16,10 +16,16 @@ class Settings(BaseSettings):
     API_PORT: int = 8000
     CORS_ORIGINS: str = "http://localhost:3000"
 
-    # Phase 2 — not required for Phase 1
-    GOOGLE_CLOUD_PROJECT: str | None = None
-    FIRESTORE_DATABASE: str | None = None
-    GEMINI_MODEL: str = "gemini-1.5-pro"
+    # Phase 2 — real Google Cloud runtime (ADC only; never JSON keys)
+    STUDIOGRID_AI_ENABLED: bool = False
+    STUDIOGRID_FIRESTORE_ENABLED: bool = False
+    STUDIOGRID_TOOL_SERVER_URL: str = "http://127.0.0.1:8000"
+    STUDIOGRID_PRODUCTION_ID: str = "last-light-demo"
+    GOOGLE_CLOUD_PROJECT: str = "studiogrid-ai"
+    GOOGLE_CLOUD_LOCATION: str = "global"
+    GOOGLE_CLOUD_AGENT_ENGINE_LOCATION: str = "europe-west3"
+    FIRESTORE_DATABASE: str = "(default)"
+    GEMINI_MODEL: str = "gemini-3.6-flash"
 
     # Partner integration
     PARTNER_SERVICE: str = "none"

@@ -6,7 +6,6 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
 from ..core.approval_gates import ApprovalRequiredError
-from ..core.tool_registry import ToolRegistry
 from ..domain.enums import OriginType
 
 router = APIRouter()
@@ -26,8 +25,7 @@ async def list_risks(request: Request):
 @router.post("/{risk_id}/resolve")
 async def resolve_risk(risk_id: str, body: ResolveRiskRequest, request: Request):
     store = request.app.state.store
-    event_bus = request.app.state.event_bus
-    registry = ToolRegistry(store=store, event_bus=event_bus)
+    registry = request.app.state.registry
     day = store.get_active_shoot_day()
     if day is None:
         raise HTTPException(status_code=400, detail="No active shoot day")

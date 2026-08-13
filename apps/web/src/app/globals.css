@@ -23,6 +23,11 @@ body {
   border-bottom: 1px solid #ea580c;
 }
 
+.runtime-banner {
+  background: #111827;
+  border-bottom: 1px solid #1e3a8a;
+}
+
 .status-planned { @apply bg-neutral-700 text-neutral-300; }
 .status-ready { @apply bg-blue-900 text-blue-300; }
 .status-in-progress { @apply bg-yellow-900 text-yellow-300; }

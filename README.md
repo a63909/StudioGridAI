@@ -7,8 +7,8 @@
 > and what the crew should do next."
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Phase](https://img.shields.io/badge/Phase-1%20MVP-blue)]()
-[![AI Status](https://img.shields.io/badge/AI-DEV%20MODE-orange)]()
+[![Phase](https://img.shields.io/badge/Phase-2%20Local%20Runtime-blue)]()
+[![AI Status](https://img.shields.io/badge/AI-Gemini%203.6%20Flash-green)]()
 
 ---
 
@@ -84,15 +84,18 @@ These four categories are always kept separate and visually distinct:
 
 | Service | Purpose |
 |---------|---------|
-| **Gemini** | LLM inference for all agents *(Phase 2)* |
-| **Agent Builder** | Official Google agent runtime / orchestration *(Phase 2)* |
+| **Gemini 3.6 Flash** | Real Vertex AI inference at the `global` endpoint |
+| **Google ADK** | `PRODUCTION_ORCHESTRATOR`, Schedule and Coverage agent graph |
+| **Vertex AI Agent Engine** | Prepared `AdkApp`; first deployment intentionally pending user IAM confirmation |
 | **Cloud Run** | FastAPI tool server + Next.js frontend |
-| **Firestore** | Production state storage *(Phase 2)* |
+| **Firestore** | Real demo state, proposals, events, and execution traces |
 | **Cloud Logging** | Structured audit trail with correlation IDs |
 | **Secret Manager** | Partner credentials only |
 | **IAM + ADC** | Authentication — no service account key files |
 
-Phase 1 runs fully locally with an in-memory store and deterministic agents.
+Deterministic controls remain available when Gemini is unavailable. Real-agent
+mode uses ADC, the FastAPI typed-tool boundary, and the isolated Firestore
+namespace `productions/last-light-demo`.
 
 ---
 
@@ -117,9 +120,10 @@ Human approval is **mandatory** for:
 
 ---
 
-## Local Development (Phase 1)
+## Local Development
 
-No Google Cloud account required for Phase 1.
+Deterministic mode requires no Google Cloud account. Real-agent mode requires
+ADC for project `studiogrid-ai`.
 
 **Backend:**
 ```bash
@@ -149,11 +153,23 @@ cd apps/web && npm test
 cd apps/web && npm run lint && npm run typecheck
 ```
 
+**Run the real local milestone smoke:**
+
+```bash
+gcloud auth application-default login
+python -m agents.google_adk.smoke_schedule
+```
+
+This runs real Gemini 3.6 Flash through Google ADK, the FastAPI Tool Server,
+Firestore, proposal retrieval, explicit human approval, schedule mutation, and
+timeline audit. It does not deploy or delete cloud data.
+
 ---
 
 ## Environment Variables
 
-Copy `.env.example` to `.env.local`. No secrets needed for Phase 1.
+Copy `.env.example` to `.env.local`. Real-agent mode uses ADC; never place
+credentials, tokens, or service-account key paths in this file.
 
 See [.env.example](.env.example) for full reference.
 
@@ -161,7 +177,7 @@ See [.env.example](.env.example) for full reference.
 
 ## IBM Bob Usage
 
-This project is built using **IBM Bob** as the development AI assistant.
+Phase 1 was built and verified using **IBM Bob** as the development AI assistant.
 
 All development actions are logged in real time:
 [docs/IBM_BOB_DEVELOPMENT_LOG.md](docs/IBM_BOB_DEVELOPMENT_LOG.md)
@@ -193,26 +209,27 @@ All names, characters, locations, and props are invented. No real IP used.
 
 ---
 
-## Cloud Deployment (Phase 2)
+## Cloud Deployment
 
-Requires Google Cloud project with billing enabled.
-See `PHASE_2_REQUIRED_USER_ACTIONS` in the milestone report.
+The local real-agent milestone is verified. The first Agent Engine deployment is
+intentionally not performed until the user confirms the deployment principal and
+least-privilege IAM roles. See ADR 005.
 
 ---
 
 ## Contest Compliance
 
-- Real Gemini + Agent Builder: Phase 2 (before submission)
+- Real Gemini 3.6 Flash + Google ADK: locally verified through Vertex AI
 - IBM Bob development evidence: [docs/IBM_BOB_DEVELOPMENT_LOG.md](docs/IBM_BOB_DEVELOPMENT_LOG.md)
 - No third-party AI models (OpenAI, Anthropic, etc.)
 - No secrets in Git
 - Human approval gates enforced in code
 - Partner integration: NOT_CONFIGURED until requirements confirmed
 
-## Known Limitations (Phase 1)
+## Known Limitations
 
-- AI not connected (`DEV MODE — AI NOT CONNECTED` shown in UI)
-- Firestore not connected (in-memory store)
-- Partner integration not configured
-- Single production (LAST LIGHT) only
-- No Cloud Run deployment yet
+- Agent Engine deployment is not yet created.
+- Partner integration remains honestly `NOT_CONFIGURED`.
+- The real cloud smoke is isolated to the synthetic LAST LIGHT demo namespace.
+- Python 3.11+ is required for deployment; the current verification workstation
+  uses Python 3.10 and receives Google's upcoming end-of-support warning.
