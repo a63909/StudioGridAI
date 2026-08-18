@@ -24,9 +24,12 @@ export function ContinuityClient() {
   };
 
   useEffect(() => {
-    load();
+    const initialLoad = window.setTimeout(() => void load(), 0);
     const interval = setInterval(load, 8000);
-    return () => clearInterval(interval);
+    return () => {
+      window.clearTimeout(initialLoad);
+      clearInterval(interval);
+    };
   }, []);
 
   const handleResolve = async (alertId: string, override = false) => {

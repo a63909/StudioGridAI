@@ -6,3 +6,7 @@ python-dotenv==1.2.2
 httpx==0.28.1
 google-auth==2.56.3
 google-cloud-firestore==2.20.2
+google-cloud-aiplatform[agent-engines,adk]==1.164.0
+google-adk==2.6.3
+google-genai==2.17.0
+cloudpickle==3.1.2

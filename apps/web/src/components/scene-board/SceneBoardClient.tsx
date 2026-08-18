@@ -14,6 +14,15 @@ const STATUS_CLASS: Record<string, string> = {
   BLOCKED: "status-blocked",
 };
 
+const STATUS_KEY = {
+  PLANNED: "planned",
+  READY: "ready",
+  IN_PROGRESS: "inProgress",
+  PARTIAL: "partial",
+  COMPLETE: "complete",
+  BLOCKED: "blocked",
+} as const;
+
 export function SceneBoardClient() {
   const t = useTranslations("sceneBoard");
   const ts = useTranslations("status");
@@ -53,7 +62,7 @@ export function SceneBoardClient() {
                     STATUS_CLASS[scene.status] || "status-planned"
                   }`}
                 >
-                  {ts(scene.status.toLowerCase().replace("_", "") as any)}
+                  {ts(STATUS_KEY[scene.status])}
                 </span>
               </div>
               <div className="text-white font-medium">{scene.title}</div>

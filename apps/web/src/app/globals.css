@@ -16,7 +16,10 @@
 body {
   background: var(--color-bg);
   color: #f5f5f5;
+  min-width: 320px;
 }
+
+.demo-scroll { content-visibility: auto; }
 
 .dev-mode-banner {
   background: #7c2d12;

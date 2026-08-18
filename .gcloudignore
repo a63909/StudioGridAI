@@ -2,10 +2,7 @@
 !Dockerfile
 !.dockerignore
 !agents/
-!agents/__init__.py
-!agents/google_adk/
-!agents/google_adk/__init__.py
-!agents/google_adk/runtime.py
+!agents/**
 !demo/
 !demo/**
 !services/

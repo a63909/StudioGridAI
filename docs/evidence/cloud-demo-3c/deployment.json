@@ -1,0 +1,113 @@
+{
+  "milestone": "STUDIOGRID_AI_CLOUD_DEMO_CONTROL_PLANE_3C",
+  "capturedAtUtc": "2026-08-18T20:09:59.0216564Z",
+  "project": "studiogrid-ai",
+  "region": "europe-west3",
+  "publicWeb": {
+    "service": "studiogrid-web",
+    "url": "https://studiogrid-web-729921508335.europe-west3.run.app",
+    "revision": "studiogrid-web-00007-zdw",
+    "imageDigest": "sha256:88c74734a35e727f11b1a1161a4a8e2048b505d9bb10110582373b59fd0602e9",
+    "buildId": "d6454949-c38a-4e78-b9c8-5ecf3edfa61b",
+    "runtimeServiceAccount": "studiogrid-web-runtime@studiogrid-ai.iam.gserviceaccount.com",
+    "access": "PUBLIC",
+    "iam": ["allUsers:roles/run.invoker"],
+    "minInstances": 0,
+    "serviceMaxInstances": 1,
+    "containerConcurrency": 20,
+    "http": {
+      "root": 200,
+      "rootEffectivePath": "/en/dashboard",
+      "apiDemo": 200
+    }
+  },
+  "privateControlApi": {
+    "service": "studiogrid-control-api",
+    "url": "https://studiogrid-control-api-729921508335.europe-west3.run.app",
+    "revision": "studiogrid-control-api-00004-qjc",
+    "imageDigest": "sha256:20f0f52e3c52816f6539d485c5281267bfece4e963b5d10441b6d8af19ae1540",
+    "buildId": "bb4e2616-ab01-4fd7-a977-f2bdb7acefec",
+    "runtimeServiceAccount": "studiogrid-control-runtime@studiogrid-ai.iam.gserviceaccount.com",
+    "access": "PRIVATE",
+    "iam": ["serviceAccount:studiogrid-web-runtime@studiogrid-ai.iam.gserviceaccount.com:roles/run.invoker"],
+    "unauthenticatedHttpStatus": 403,
+    "minInstances": 0,
+    "serviceMaxInstances": 1,
+    "containerConcurrency": 20
+  },
+  "privateToolServer": {
+    "service": "studiogrid-tool-server",
+    "url": "https://studiogrid-tool-server-udlec7cupa-ey.a.run.app",
+    "revision": "studiogrid-tool-server-00002-bpz",
+    "imageDigest": "sha256:016e54608ec7106f8399225e1370dfcb24f54c1c3f7fe470d845b30fb71b4321",
+    "runtimeServiceAccount": "studiogrid-tool-server@studiogrid-ai.iam.gserviceaccount.com",
+    "access": "PRIVATE",
+    "unauthenticatedHttpStatus": 403,
+    "redeployedFor3C": false
+  },
+  "agentEngine": {
+    "resource": "projects/729921508335/locations/europe-west3/reasoningEngines/5132986471388545024",
+    "model": "gemini-3.6-flash",
+    "status": "CONNECTED",
+    "redeployedFor3C": false
+  },
+  "goldenFlow": {
+    "status": "PASS",
+    "demoSessionId": "550b6fa8-2906-47e2-9c0c-a5e216a5de34",
+    "resetCompletedShotCount": 3,
+    "act02": {
+      "proposalId": "de06a28b-168b-49e5-bb60-f9d3de195b16",
+      "executionId": "97604d5e-bcf7-4f51-b539-b95107885a56",
+      "correlationId": "demo-550b6fa8-290-f2b0a0b4-1355-499c-a412-3b4a8cec2e4c",
+      "model": "gemini-3.6-flash",
+      "proposalStatusBeforeDecision": "PENDING",
+      "humanDecision": "APPROVED",
+      "persistedAfterRefresh": true,
+      "timelineClassifications": ["FACT", "INFERENCE", "RECOMMENDATION", "HUMAN_DECISION"],
+      "afterSceneOrder": ["SC_02", "SC_01", "SC_03", "SC_08", "SC_04", "SC_05", "SC_06", "SC_07", "SC_09", "SC_10"]
+    },
+    "act03": {
+      "proposalId": "58d5bf8e-47f4-457e-aacf-2fdc7f20be8f",
+      "actorId": "ACT_03",
+      "delayMinutes": 30,
+      "proposalStatus": "PENDING",
+      "closedByHuman": "REJECTED"
+    },
+    "coverage": {
+      "alertId": "fb23567e-48e7-412a-bc21-b020fc425f3f",
+      "status": "OPEN",
+      "missingShotIds": ["SH_12", "SH_13"]
+    },
+    "runtime": {
+      "agentEngine": "CONNECTED",
+      "gemini": "CONNECTED",
+      "privateToolServer": "CONNECTED",
+      "firestore": "CONNECTED"
+    }
+  },
+  "browserVerification": {
+    "status": "PASS",
+    "publicBrowserRequiresLocalhost": false,
+    "englishDefault": true,
+    "englishGoldenPath": true,
+    "russianGoldenPath": true,
+    "mobileViewport": {"width": 390, "height": 844},
+    "finalRevisionBrowserSmoke": true,
+    "finalRevisionSmokeViewport": {"width": 1280, "height": 720},
+    "humanDecisionPersistedAfterRefresh": true,
+    "mobileStatusOverflow": false,
+    "technicalEvidenceExpanded": true,
+    "screenshotCommitted": false,
+    "screenshotNote": "In-app capture timed out after the layout fix; no stale or fabricated screenshot was committed. The final revision was rechecked in the public in-app browser at its default viewport; the dedicated 390x844 pass used the same layout source before deployment. DOM and live cloud assertions are recorded instead."
+  },
+  "actualIamChanges": [
+    "created studiogrid-web-runtime@studiogrid-ai.iam.gserviceaccount.com",
+    "created studiogrid-control-runtime@studiogrid-ai.iam.gserviceaccount.com",
+    "granted roles/aiplatform.user to the Control runtime service account at project scope",
+    "granted roles/datastore.user to the Control runtime service account at project scope",
+    "granted roles/logging.logWriter to the Control runtime service account at project scope",
+    "granted roles/run.invoker on studiogrid-control-api only to the web runtime service account",
+    "granted roles/run.invoker on studiogrid-web to allUsers"
+  ],
+  "postAuthorizationIamChanges": []
+}

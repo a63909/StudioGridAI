@@ -3,10 +3,11 @@ import { DevModeBanner } from "@/components/shared/DevModeBanner";
 
 interface LayoutProps {
   children: React.ReactNode;
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }
 
-export default function PageLayout({ children, params: { locale } }: LayoutProps) {
+export default async function PageLayout({ children, params }: LayoutProps) {
+  const { locale } = await params;
   return (
     <div className="min-h-screen flex flex-col">
       <DevModeBanner />

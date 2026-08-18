@@ -204,6 +204,25 @@
     "notFound": "Resource not found",
     "serverError": "Server error"
   },
+  "cloudDemo": {
+    "nav": "Cloud control room",
+    "cloudDemo": "Live cloud demo",
+    "subtitle": "AI Production Control Room",
+    "film": "Film",
+    "shootDay": "Shooting day",
+    "loading": "Connecting to the private StudioGrid control plane...",
+    "working": "Working in cloud...",
+    "reset": "Reset demo",
+    "metrics": { "status": "Production status", "scenes": "Scenes", "shots": "Shots", "completedShots": "Completed shots", "actors": "Actors", "session": "Demo state" },
+    "actorDelay": { "eyebrow": "Production fact", "title": "Simulate actor delay", "description": "Submit a predefined LAST LIGHT fact. The deployed orchestrator and Schedule Agent will produce a real recommendation through the private Tool Server.", "maya": "Maya Reed · 45m", "daniel": "Daniel Osei · 30m", "button": "Simulate {minutes} min delay", "running": "Agent Engine is running...", "fact": "{actor} is delayed by {minutes} minutes." },
+    "runtime": { "title": "Cloud status", "agentEngine": "Agent Engine", "gemini": "Gemini", "toolServer": "Private Tool Server", "firestore": "Firestore", "truth": "Connected is shown only after a real resource check or verified durable agent execution." },
+    "proposal": { "eyebrow": "Agent output", "title": "Schedule proposal", "empty": "Run an actor-delay scenario to request a real cloud recommendation.", "expectedBenefit": "Expected recovery", "evidence": "Evidence", "ordering": "Proposed ordering", "affected": "Affected scenes", "risks": "Risks", "confidence": "Confidence", "approve": "Approve as human", "reject": "Reject as human", "humanOnly": "The agent cannot perform this decision.", "approvedHuman": "Approved by human", "rejectedHuman": "Rejected by human" },
+    "schedule": { "eyebrow": "Operational impact", "title": "Schedule before / after", "description": "Changed scenes are highlighted from the durable schedule, not a UI simulation.", "current": "Current", "before": "Before", "after": "After human approval" },
+    "coverage": { "eyebrow": "Coverage Agent", "title": "Check real shot coverage", "description": "Complete the fixed SH_11 demo fact and ask the deployed Coverage Agent to compare actual planned and completed shots for SC_05.", "button": "Check coverage", "running": "Coverage Agent is running...", "completed": "shots completed", "missing": "Actual missing shots" },
+    "timeline": { "eyebrow": "Audit trail", "title": "Fact → decision timeline", "empty": "Demo actions will appear here from durable evidence." },
+    "evidence": { "title": "How this ran · Technical evidence", "description": "Safe operational metadata only. Credentials, tokens, prompts, and chain-of-thought are never displayed.", "provider": "Runtime", "agent": "Agent", "model": "Model", "execution": "Execution ID", "session": "Agent session ID", "correlation": "Correlation ID", "duration": "Duration", "tools": "Verified tool calls", "references": "Evidence references", "rationale": "Short rationale", "empty": "Run an agent action to populate verified evidence." },
+    "errors": { "title": "Cloud action failed.", "load": "Could not load the private cloud demo state.", "action": "The action failed safely; no unverified change was applied." }
+  },
   "language": {
     "en": "English",
     "ru": "Русский",

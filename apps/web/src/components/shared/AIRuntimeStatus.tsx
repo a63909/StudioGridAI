@@ -29,9 +29,7 @@ export function AIRuntimeStatus() {
 
   const fetchStatus = async () => {
     try {
-      const res = await fetch(
-        (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000") + "/health"
-      );
+      const res = await fetch("/api/demo");
       if (res.ok) {
         const data = await res.json();
         setStatus({
@@ -58,9 +56,12 @@ export function AIRuntimeStatus() {
   };
 
   useEffect(() => {
-    fetchStatus();
+    const initialLoad = window.setTimeout(() => void fetchStatus(), 0);
     const interval = setInterval(fetchStatus, 10000);
-    return () => clearInterval(interval);
+    return () => {
+      window.clearTimeout(initialLoad);
+      clearInterval(interval);
+    };
   }, []);
 
   if (!status) return null;

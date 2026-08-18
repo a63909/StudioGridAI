@@ -3,6 +3,8 @@
  * Verifies that EN and RU have identical key sets and no empty values.
  */
 import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import en from "../i18n/en.json";
 import ru from "../i18n/ru.json";
 
@@ -62,9 +64,24 @@ describe("Localization", () => {
   });
 
   it("devMode.banner is defined in both locales", () => {
-    expect((en as any).devMode?.banner).toBeDefined();
-    expect((ru as any).devMode?.banner).toBeDefined();
-    expect((en as any).devMode?.banner).not.toBe("");
-    expect((ru as any).devMode?.banner).not.toBe("");
+    expect(en.devMode?.banner).toBeDefined();
+    expect(ru.devMode?.banner).toBeDefined();
+    expect(en.devMode?.banner).not.toBe("");
+    expect(ru.devMode?.banner).not.toBe("");
+  });
+
+  it("the complete cloud golden path is localized in EN and RU", () => {
+    const cloudKeys = enKeys.filter((key) => key.startsWith("cloudDemo."));
+    expect(cloudKeys.length).toBeGreaterThan(50);
+    expect(en.cloudDemo.proposal.approve).toContain("human");
+    expect(ru.cloudDemo.proposal.approve).toContain("человек");
+    expect(en.cloudDemo.evidence.description).toContain("chain-of-thought");
+    expect(ru.cloudDemo.evidence.description).toContain("цепочка рассуждений");
+  });
+
+  it("keeps English as the deterministic public default", () => {
+    const proxy = readFileSync(join(process.cwd(), "src/proxy.ts"), "utf8");
+    expect(proxy).toContain("defaultLocale");
+    expect(proxy).toContain("localeDetection: false");
   });
 });

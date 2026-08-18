@@ -7,6 +7,7 @@ events, proposals, alerts, and safe execution traces to Firestore.
 from __future__ import annotations
 
 import logging
+import re
 from datetime import datetime
 from typing import Any
 
@@ -38,6 +39,7 @@ class FirestoreStateStore:
 
     COLLECTION = "productions"
     DEMO_PRODUCTION_ID = "last-light-demo"
+    _DEMO_SESSION_ID = re.compile(r"^[A-Za-z0-9_-]{16,80}$")
 
     def __init__(
         self,
@@ -122,6 +124,10 @@ class FirestoreStateStore:
         doc = await self._sub("proposals").document(proposal_id).get()
         return doc.to_dict() if doc.exists else None
 
+    async def get_coverage_alert(self, alert_id: str) -> dict[str, Any] | None:
+        doc = await self._sub("coverage_alerts").document(alert_id).get()
+        return doc.to_dict() if doc.exists else None
+
     async def list_proposals(self) -> list[dict[str, Any]]:
         docs = await self._sub("proposals").get()
         return [doc.to_dict() for doc in docs]
@@ -139,6 +145,36 @@ class FirestoreStateStore:
             "timestamp", direction=Query.DESCENDING
         ).limit(limit).get()
         return [doc.to_dict() for doc in docs]
+
+    def _validate_demo_session_id(self, session_id: str) -> None:
+        if not self._DEMO_SESSION_ID.fullmatch(session_id):
+            raise ValueError("Invalid demoSessionId")
+
+    async def get_demo_session(self, session_id: str) -> dict[str, Any] | None:
+        """Read one browser-scoped demo control document."""
+        self._validate_demo_session_id(session_id)
+        doc = await self._sub("demo_sessions").document(session_id).get()
+        return doc.to_dict() if doc.exists else None
+
+    async def save_demo_session(
+        self,
+        session_id: str,
+        payload: dict[str, Any],
+        *,
+        merge: bool = True,
+    ) -> None:
+        """Persist safe control metadata without deleting historical evidence."""
+        self._validate_demo_session_id(session_id)
+        safe_payload = {
+            **payload,
+            "demoSessionId": session_id,
+            "productionId": self.production_id,
+            "updatedAt": datetime.utcnow().isoformat(),
+        }
+        await self._sub("demo_sessions").document(session_id).set(
+            safe_payload,
+            merge=merge,
+        )
 
     async def cleanup_demo_data(self) -> int:
         """Delete only known collections in the explicit StudioGrid demo namespace.

@@ -3,8 +3,9 @@
  * All counts and data come from the API — never hardcoded in the UI.
  */
 
-const BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+// Legacy screens remain unprivileged and same-origin. The cloud demo uses only
+// /api/demo; no browser-visible environment variable can select a backend.
+const BASE_URL = "/api/legacy";
 
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {

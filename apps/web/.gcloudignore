@@ -1,0 +1,10 @@
+# Upload only source required by the Cloud Run Docker build.
+.gcloudignore
+.git
+.gitignore
+.next
+node_modules
+coverage
+*.log
+.env
+.env.*

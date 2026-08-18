@@ -9,8 +9,7 @@ WORKDIR /app
 COPY services/api/requirements.cloudrun.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir --disable-pip-version-check -r /tmp/requirements.txt
 
-COPY agents/__init__.py ./agents/__init__.py
-COPY agents/google_adk/__init__.py agents/google_adk/runtime.py ./agents/google_adk/
+COPY agents ./agents
 COPY demo ./demo
 COPY services ./services
 

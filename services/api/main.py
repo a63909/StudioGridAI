@@ -14,7 +14,7 @@ from .config import settings
 from .core.event_bus import LocalEventBus
 from .core.tool_registry import ToolRegistry
 from .db.local_store import LocalStateStore
-from .routers import events, production, scenes, shots, schedule, continuity, risks, report, tools
+from .routers import control, events, production, scenes, shots, schedule, continuity, risks, report, tools
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +77,7 @@ async def lifespan(app: FastAPI):
             persistence=persistence,
         )
 
-        if settings.STUDIOGRID_AGENT_TOOL_SERVER_ONLY:
+        if settings.STUDIOGRID_AGENT_TOOL_SERVER_ONLY or settings.STUDIOGRID_CONTROL_API_ONLY:
             # The private Cloud Run receiver exposes typed agent tools only.
             # Human routes stay available in the local/full application mode.
             app.state.orchestrator = None
@@ -85,6 +85,19 @@ async def lifespan(app: FastAPI):
             from agents.orchestrator import ProductionOrchestrator
             orchestrator = ProductionOrchestrator(store=store, event_bus=event_bus)
             app.state.orchestrator = orchestrator
+
+        if settings.STUDIOGRID_CONTROL_API_ONLY:
+            if persistence is None:
+                logger.error("control_api_requires_firestore")
+                app.state.control_service = None
+            else:
+                from .control_service import DemoControlService
+
+                app.state.control_service = DemoControlService(
+                    store=store,
+                    registry=app.state.registry,
+                    persistence=persistence,
+                )
 
         logger.info("last_light_dataset_loaded", extra={"productionId": data["productionId"]})
     else:
@@ -119,6 +132,10 @@ async def private_agent_tool_boundary(request: Request, call_next):
         path = request.url.path
         if path != "/health" and not path.startswith("/tools/agent/"):
             return JSONResponse(status_code=404, content={"detail": "Not found"})
+    if settings.STUDIOGRID_CONTROL_API_ONLY:
+        path = request.url.path
+        if path != "/health" and not path.startswith("/control/"):
+            return JSONResponse(status_code=404, content={"detail": "Not found"})
     return await call_next(request)
 
 # Inject shared state into routers
@@ -126,6 +143,7 @@ app.state.store = store
 app.state.event_bus = event_bus
 app.state.persistence = None
 app.state.registry = ToolRegistry(store=store, event_bus=event_bus)
+app.state.control_service = None
 
 # Register routers
 app.include_router(production.router, prefix="/production", tags=["production"])
@@ -137,6 +155,7 @@ app.include_router(risks.router, prefix="/risks", tags=["risks"])
 app.include_router(report.router, prefix="/report", tags=["report"])
 app.include_router(events.router, prefix="/events", tags=["events"])
 app.include_router(tools.router, prefix="/tools", tags=["agent-tools"])
+app.include_router(control.router, prefix="/control", tags=["private-control"])
 
 
 @app.get("/health")
@@ -150,6 +169,9 @@ async def health():
         runtime_status = rt.get_runtime_status()
     except Exception:
         pass
+
+    if settings.STUDIOGRID_CONTROL_API_ONLY and app.state.control_service is not None:
+        return await app.state.control_service.health()
 
     return {
         "status": "ok",

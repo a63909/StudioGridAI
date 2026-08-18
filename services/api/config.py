@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     STUDIOGRID_AI_ENABLED: bool = False
     STUDIOGRID_FIRESTORE_ENABLED: bool = False
     STUDIOGRID_AGENT_TOOL_SERVER_ONLY: bool = False
+    STUDIOGRID_CONTROL_API_ONLY: bool = False
     STUDIOGRID_TOOL_SERVER_URL: str = "http://127.0.0.1:8000"
     STUDIOGRID_TOOL_SERVER_AUTHENTICATED: bool = False
     STUDIOGRID_PRODUCTION_ID: str = "last-light-demo"
@@ -28,6 +29,10 @@ class Settings(BaseSettings):
     GOOGLE_CLOUD_AGENT_ENGINE_LOCATION: str = "europe-west3"
     FIRESTORE_DATABASE: str = "(default)"
     GEMINI_MODEL: str = "gemini-3.6-flash"
+    STUDIOGRID_AGENT_ENGINE_RESOURCE: str = (
+        "projects/729921508335/locations/europe-west3/"
+        "reasoningEngines/5132986471388545024"
+    )
 
     # Partner integration
     PARTNER_SERVICE: str = "none"

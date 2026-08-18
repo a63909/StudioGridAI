@@ -34,8 +34,7 @@ export function TimelineClient() {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-    const source = new EventSource(`${apiUrl}/events/stream`);
+    const source = new EventSource("/api/legacy/events/stream");
 
     source.onopen = () => setConnected(true);
     source.onerror = () => setConnected(false);
