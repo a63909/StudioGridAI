@@ -1,0 +1,52 @@
+flowchart TB
+    classDef public fill:#102a43,stroke:#38bdf8,color:#f8fafc,stroke-width:2px
+    classDef private fill:#27164a,stroke:#a78bfa,color:#f8fafc,stroke-width:2px
+    classDef agent fill:#0f3d2e,stroke:#34d399,color:#f8fafc,stroke-width:2px
+    classDef data fill:#3b2b0b,stroke:#fbbf24,color:#f8fafc,stroke-width:2px
+    classDef human fill:#4a1726,stroke:#fb7185,color:#f8fafc,stroke-width:3px
+    classDef boundary fill:#111827,stroke:#f43f5e,color:#f8fafc,stroke-width:3px,stroke-dasharray: 7 5
+
+    Browser["PUBLIC BROWSER<br/>Judge / Production Manager"]:::public
+    Web["PUBLIC CLOUD RUN<br/>studiogrid-web<br/>Next.js"]:::public
+    BFF["SERVER-SIDE AUTHENTICATED BFF<br/>Google ID token · allowlisted demo actions"]:::private
+    Control["PRIVATE CLOUD RUN<br/>studiogrid-control-api<br/>control plane"]:::private
+    Engine["VERTEX AI AGENT ENGINE<br/>deployed ADK application"]:::agent
+    Orchestrator["PRODUCTION ORCHESTRATOR<br/>event routing"]:::agent
+    Schedule["SCHEDULE AGENT<br/>actor / scene / location / dependency / daylight constraints"]:::agent
+    Coverage["COVERAGE AGENT<br/>planned vs completed shots"]:::agent
+    Gemini["GEMINI 3.6 FLASH<br/>Vertex AI"]:::agent
+    Tools["TYPED AUTHENTICATED TOOLS<br/>create proposal · create coverage alert"]:::private
+    ToolServer["PRIVATE CLOUD RUN<br/>studiogrid-tool-server"]:::private
+    Firestore[("FIRESTORE<br/>state · proposals · events · execution evidence")]:::data
+
+    Pending["PENDING PROPOSAL<br/>AGENT MAY PROPOSE"]:::boundary
+    Human["HUMAN APPROVE / REJECT<br/>outside AI authority boundary"]:::human
+    Mutation["CONTROL API STATE MUTATION<br/>schedule change or rejection<br/>HUMAN_DECISION audit event"]:::private
+
+    Browser -->|HTTPS| Web
+    Web --> BFF
+    BFF -->|authenticated service-to-service call| Control
+    Control -->|remote session / query| Engine
+    Engine --> Orchestrator
+    Orchestrator --> Schedule
+    Orchestrator --> Coverage
+    Schedule <-->|reasoning| Gemini
+    Coverage <-->|reasoning| Gemini
+    Schedule --> Tools
+    Coverage --> Tools
+    Tools -->|runtime identity| ToolServer
+    ToolServer -->|durable writes| Firestore
+    Control -->|read durable state| Firestore
+    ToolServer --> Pending
+    Pending -. "AI MAY NOT APPROVE" .-> Human
+    Human -->|explicit browser action| Web
+    Web --> BFF
+    BFF --> Control
+    Control --> Mutation
+    Mutation --> Firestore
+
+    subgraph Authority["CONSEQUENTIAL AUTHORITY BOUNDARY"]
+      Pending
+      Human
+      Mutation
+    end

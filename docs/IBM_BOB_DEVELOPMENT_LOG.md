@@ -23,7 +23,7 @@ Each entry contains:
 
 ### Entry 001
 
-**Date:** 2025
+**Date:** August 2026
 **Milestone:** STUDIOGRID_AI_PRODUCTION_CONTROL_MVP_1
 **Task:** Full project planning вЂ” architecture design
 **Mode:** Plan
@@ -51,7 +51,7 @@ Each entry contains:
 
 ### Entry 002
 
-**Date:** 2025
+**Date:** August 2026
 **Milestone:** STUDIOGRID_AI_PRODUCTION_CONTROL_MVP_1
 **Task:** Phase 1 implementation вЂ” repository scaffold
 **Mode:** Agent
@@ -77,7 +77,7 @@ Each entry contains:
 
 ### Entry 003
 
-**Date:** 2025
+**Date:** August 2026
 **Milestone:** STUDIOGRID_AI_PRODUCTION_CONTROL_MVP_1
 **Task:** Phase 1 implementation вЂ” domain model, event system, LAST LIGHT dataset
 **Mode:** Agent
@@ -88,7 +88,7 @@ Each entry contains:
 
 ### Entry 004
 
-**Date:** 2025
+**Date:** August 2026
 **Milestone:** STUDIOGRID_AI_PRODUCTION_CONTROL_MVP_1
 **Task:** Phase 1 implementation вЂ” tool contracts, agents, FastAPI backend
 **Mode:** Agent
@@ -99,7 +99,7 @@ Each entry contains:
 
 ### Entry 005
 
-**Date:** 2025
+**Date:** August 2026
 **Milestone:** STUDIOGRID_AI_PRODUCTION_CONTROL_MVP_1
 **Task:** Phase 1 implementation вЂ” Next.js frontend, localization, tests
 **Mode:** Agent
@@ -110,7 +110,7 @@ Each entry contains:
 
 ### Entry 006
 
-**Date:** 2025
+**Date:** August 2026
 **Milestone:** STUDIOGRID_AI_PRODUCTION_CONTROL_MVP_1
 **Task:** Phase 1 вЂ” Git init, secret scan, checkpoint commit
 **Mode:** Agent

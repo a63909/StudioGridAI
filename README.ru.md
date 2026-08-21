@@ -1,223 +1,67 @@
 # StudioGrid AI
 
-**ИИ-диспетчерская кинопроизводства.**
+**AI Production Control Room** — развернутая multi-agent система для реакции на изменения съемочного дня.
 
-> «ИИ-диспетчерская кинопроизводства, которая понимает план съёмок и фактическое
-> состояние площадки, обнаруживает проблемы, прогнозирует последствия
-> и предлагает следующий лучший шаг».
+Актуальная полная документация, Quick Judge Path и инструкции запуска находятся в [README.md](README.md). Английская версия является основной для All Things Agentic Hackathon.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Этап](https://img.shields.io/badge/Этап-2%20Local%20Runtime-blue)]()
-[![Статус ИИ](https://img.shields.io/badge/ИИ-Gemini%203.6%20Flash-green)]()
+## Публичное demo
 
----
+<https://studiogrid-web-729921508335.europe-west3.run.app>
 
-## Что такое StudioGrid AI
+1. Нажать **Reset Demo**.
+2. Выбрать **Maya Reed** и запустить задержку **45 минут**.
+3. Дождаться реального proposal от Vertex AI Agent Engine.
+4. Проверить WHY, evidence, risks, confidence и Technical Evidence.
+5. Нажать **Одобрить как человек**.
+6. Сравнить schedule BEFORE/AFTER.
+7. Найти `HUMAN_DECISION` и обновить страницу для проверки persistence.
+8. Запустить Coverage Check и увидеть missing `SH_12`/`SH_13`.
 
-StudioGrid AI — **не чат-бот**. Не генератор сценариев. Не приложение для генерации фильмов.
+Demo использует полностью вымышленный фильм LAST LIGHT и синтетические данные. Localhost и вход не требуются.
 
-Это **координационный слой** настоящей съёмочной площадки: интеллектуальная система диспетчеризации,
-которая непрерывно отслеживает план против фактического состояния съёмки, обнаруживает проблемы
-в реальном времени и предлагает следующий лучший шаг — всегда с обязательным подтверждением человека.
+## Что делает система
 
-Помогает:
-- Режиссёру и первому ассистенту режиссёра
-- Линейному продюсеру и production manager
-- Script supervisor
-- Операторской группе
-- Монтажной группе
+При `ACTOR_DELAYED` public web через server-side authenticated BFF вызывает private Control API. Тот запускает Google ADK application в Vertex AI Agent Engine. Production Orchestrator направляет событие Schedule Agent; Gemini 3.6 Flash анализирует актеров, сцены, локации, dependencies, порядок и daylight constraints. Агент вызывает typed tool приватного Tool Server и сохраняет PENDING recommendation в Firestore.
 
----
+AI не может одобрить собственное предложение. Человек APPROVE/REJECT находится за отдельной server-side authority boundary. Approval меняет schedule и создает durable `HUMAN_DECISION`.
 
-## Проблема
+Coverage Agent независимо сравнивает planned/completed shots и создает alert для отсутствующих `SH_12` и `SH_13`.
 
-Один съёмочный день может стоить $100 000+. Когда актёр задерживается, локация становится
-недоступной или выясняется неполное покрытие сцены, съёмочная группа вынуждена координироваться
-вручную через таблицы. Ошибки накапливаются. Время теряется.
+## Проверенный Google Cloud stack
 
----
+- Gemini 3.6 Flash через Vertex AI
+- Google ADK 2.6.3
+- Vertex AI Agent Engine
+- public Cloud Run `studiogrid-web`
+- private Cloud Run `studiogrid-control-api`
+- private Cloud Run `studiogrid-tool-server`
+- Firestore
+- Cloud Trace / safe execution metadata
 
-## Рабочий процесс
-
-1. Съёмочный день начинается с **запланированного расписания** (18 кадров, 10 сцен)
-2. События происходят в реальном времени: кадры сняты, актёр задержан, локация предупреждает
-3. Агенты анализируют последствия с учётом **ограничений**: доступность актёров и локаций,
-   зависимости между сценами, дневной свет, реквизит, непрерывность
-4. Агенты создают **предложения** с полным обоснованием: ПРИЧИНА, ДОКАЗАТЕЛЬСТВА, ВЫГОДА, РИСКИ, УВЕРЕННОСТЬ
-5. Человек рассматривает и принимает решение: **ОДОБРИТЬ / ОТКЛОНИТЬ / ОБЪЯСНИТЬ**
-6. Только после одобрения человеком расписание реально меняется
-7. В конце дня: **итоговый отчёт**, рассчитанный из фактического состояния
-
----
-
-## Многоагентная архитектура
-
-| Агент | Ответственность |
-|-------|-----------------|
-| `PRODUCTION_ORCHESTRATOR` | Координирует всех агентов, маршрутизирует события |
-| `SCRIPT_BREAKDOWN_AGENT` | Превращает production package в типизированную модель |
-| `SCHEDULE_AGENT` | Обнаруживает конфликты, создаёт предложения по расписанию |
-| `COVERAGE_AGENT` | Отслеживает план vs факт по кадрам, предупреждает о пробелах |
-| `CONTINUITY_AGENT` | Обнаруживает конфликты непрерывности между кадрами |
-| `PRODUCTION_RISK_AGENT` | Агрегирует и приоритизирует риски производства |
-| `WRAP_REPORT_AGENT` | Формирует итоговый отчёт из фактического состояния |
-
-Все агенты взаимодействуют со слоем состояния исключительно через **типизированные вызовы инструментов**.
-Агенты никогда не обращаются к базе данных напрямую.
-
----
-
-## ФАКТ / ВЫВОД / РЕКОМЕНДАЦИЯ / РЕШЕНИЕ_ЧЕЛОВЕКА
-
-Эти четыре категории всегда хранятся отдельно и визуально различимы:
-
-| Категория | Пример |
-|-----------|--------|
-| **ФАКТ** | Maya Reed сообщила о недоступности до 11:30 |
-| **ВЫВОД** | Сцены 14 и 18 в данный момент недоступны для съёмки |
-| **РЕКОМЕНДАЦИЯ** | Перенести Сцену 22 перед Сценой 18 |
-| **РЕШЕНИЕ_ЧЕЛОВЕКА** | Одобрено production manager в 10:14 |
-
----
-
-## Архитектура Google Cloud
-
-| Сервис | Назначение |
-|--------|-----------|
-| **Gemini 3.6 Flash** | Реальный Vertex AI inference через endpoint `global` |
-| **Google ADK** | `PRODUCTION_ORCHESTRATOR`, Schedule и Coverage agents |
-| **Vertex AI Agent Engine** | `AdkApp` подготовлен; первый deployment ожидает подтверждения IAM |
-| **Cloud Run** | FastAPI tool server + Next.js frontend |
-| **Firestore** | Реальные demo state, proposals, events и execution traces |
-| **Cloud Logging** | Структурированный audit trail с correlation ID |
-| **Secret Manager** | Только учётные данные партнёра |
-| **IAM + ADC** | Аутентификация — без файлов ключей сервисного аккаунта |
-
-При недоступности Gemini детерминированные controls продолжают работать. Real-agent
-режим использует ADC, FastAPI typed-tool boundary и изолированный namespace
-`productions/last-light-demo`.
-
----
-
-## Подтверждение человека
-
-Подтверждение человека **обязательно** для:
-- Изменений расписания
-- Переопределения предупреждений о непрерывности
-- Закрытия рисков CRITICAL / HIGH
-- Отметки сцены COMPLETE при открытых предупреждениях о покрытии
-- Удаления production данных
-
----
+Архитектура: [source](docs/all-things-agentic/architecture.mmd) · [PNG](docs/all-things-agentic/assets/studiogrid-architecture.png)
 
 ## Безопасность
 
-- Агенты никогда не обращаются к Firestore напрямую
-- Все мутации: валидация схемы → авторизация → approval gate → audit log
-- Никаких секретов в коде или Git
-- Application Default Credentials (ADC), без файлов ключей
-- См. [SECURITY.md](SECURITY.md)
+- browser не получает private service URL или token;
+- public API принимает только фиксированные demo operations;
+- agents не имеют прямого доступа к Firestore;
+- typed tools проверяют caller, schema и state transition;
+- AGENT/SYSTEM не могут вызвать approval/rejection;
+- arbitrary prompt fields запрещены;
+- credentials, raw prompts и chain-of-thought не сохраняются в evidence.
 
----
+Подробнее: [SECURITY.md](SECURITY.md).
 
-## Локальная разработка
+## Данные и ограничения
 
-Для детерминированного режима аккаунт Google Cloud не нужен. Real-agent режим
-использует ADC проекта `studiogrid-ai`.
+LAST LIGHT — оригинальный fictional production package. Реальные клиенты, studio partnerships, production adoption, измеренная экономия и compliance certification не заявляются. Кнопки demo создают структурированные события; система не заявляет интеграцию с реальными call sheets, email, calendar или IoT.
 
-**Backend:**
-```bash
-cd services/api
-pip install -e ".[dev]"
-uvicorn main:app --reload
-```
+## Submission materials
 
-**Frontend:**
-```bash
-cd apps/web
-npm install
-npm run dev
-```
+- [Official requirements](docs/all-things-agentic/OFFICIAL_REQUIREMENTS.md)
+- [English Devpost copy](docs/all-things-agentic/DEVPOST_SUBMISSION_EN.md)
+- [Russian reference copy](docs/all-things-agentic/DEVPOST_SUBMISSION_RU.md)
+- [Project chronology](docs/all-things-agentic/PROJECT_CHRONOLOGY.md)
+- [Video script](docs/all-things-agentic/VIDEO_SCRIPT_EN.md)
 
-Откройте [http://localhost:3000](http://localhost:3000)
-
-**Запуск тестов:**
-```bash
-# Backend
-cd services/api && pytest
-
-# Frontend
-cd apps/web && npm test
-
-# Lint + typecheck
-cd apps/web && npm run lint && npm run typecheck
-```
-
-**Реальный локальный smoke milestone:**
-
-```bash
-gcloud auth application-default login
-python -m agents.google_adk.smoke_schedule
-```
-
-Команда проверяет реальные Gemini 3.6 Flash, Google ADK, FastAPI Tool Server,
-Firestore, получение proposal в API, явный human approval, изменение schedule и
-timeline audit. Она не выполняет deployment и не удаляет cloud-данные.
-
----
-
-## Переменные среды
-
-Скопируйте `.env.example` в `.env.local`. Real-agent режим использует ADC;
-никогда не помещайте сюда credentials, tokens или пути к service-account keys.
-
----
-
-## IBM Bob
-
-Этап 1 был разработан и проверен с использованием **IBM Bob** в качестве AI-ассистента разработки.
-
-Все действия логируются в реальном времени:
-[docs/IBM_BOB_DEVELOPMENT_LOG.md](docs/IBM_BOB_DEVELOPMENT_LOG.md)
-
----
-
-## Интеграция с партнёром
-
-**Статус: `NOT_CONFIGURED`**
-
-Интеграция с партнёром будет реализована только после официального подтверждения
-требований конкурса к runtime партнёра. Фиктивные подключения не заявляются.
-
----
-
-## Демо-фильм — LAST LIGHT
-
-Полностью **оригинальный, синтетический** production package для вымышленного короткометражного фильма.
-
-- 4 вымышленных актёра
-- 3 вымышленных локации
-- 10 сцен, 22+ запланированных кадра
-- Встроенный конфликт непрерывности для демо
-- Сценарий задержки актёра
-
-Все имена, персонажи, локации и реквизит вымышлены. Чужая интеллектуальная собственность не используется.
-
----
-
-## Соответствие требованиям конкурса
-
-- Реальный Gemini 3.6 Flash + Google ADK: локально проверены через Vertex AI
-- Доказательства разработки с IBM Bob: [docs/IBM_BOB_DEVELOPMENT_LOG.md](docs/IBM_BOB_DEVELOPMENT_LOG.md)
-- Никаких сторонних AI-моделей (OpenAI, Anthropic и др.)
-- Никаких секретов в Git
-- Human approval gates реализованы в коде
-- Интеграция с партнёром: NOT_CONFIGURED до подтверждения требований
-
-## Известные ограничения
-
-- Интеграция с партнёром не настроена
-- Agent Engine deployment ещё не создан
-- Реальный cloud smoke изолирован синтетическим namespace LAST LIGHT
-- Для deployment требуется Python 3.11+; workstation проверки использует Python
-  3.10 и получает предупреждение Google о скором завершении поддержки
+Personal eligibility, repository publication, video upload и финальный Devpost submission остаются действиями участника.

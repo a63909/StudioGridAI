@@ -1,79 +1,106 @@
-# Security Policy
+# Security policy
 
-## Supported Versions
+## Reporting a vulnerability
 
-| Version | Supported |
-|---------|-----------|
-| main    | ✅        |
+Do not open a public issue containing exploit details, credentials, personal data, or private cloud identifiers. Use the repository host's private security-advisory feature when the public repository is created.
 
-## Reporting a Vulnerability
+Include a concise description, reproduction steps, likely impact, and a suggested mitigation if available.
 
-Please do **NOT** open a public GitHub issue for security vulnerabilities.
+## Current trust boundaries
 
-Contact: [Create a private security advisory on GitHub]
-
-Provide:
-- Description of the vulnerability
-- Steps to reproduce
-- Potential impact
-- Suggested fix (optional)
-
-We aim to respond within 72 hours.
-
-## Security Model
-
-### Trust Boundaries
-
-```
-[ Browser ]
-      │  HTTPS only
+```text
+[ Public browser ]
+      │ HTTPS, fixed demo actions
       ▼
-[ Cloud Run — FastAPI Tool Server ]
-      │
-      ├── Pydantic schema validation (all inputs)
-      ├── Tool Registry (per-tool authorization check)
-      ├── Approval Gates (blocking gates for destructive mutations)
-      ├── Audit Logger → Cloud Logging
-      └── State Layer → Firestore (via ADC, no key files)
+[ Public Cloud Run: studiogrid-web ]
+      │ server-side Google ID token
+      ▼
+[ Private Cloud Run: studiogrid-control-api ]
+      │ remote Agent Engine invocation
+      ▼
+[ Vertex AI Agent Engine / Google ADK / Gemini ]
+      │ authenticated typed tool calls
+      ▼
+[ Private Cloud Run: studiogrid-tool-server ]
+      │ validated durable writes
+      ▼
+[ Firestore ]
 
-[ Google ADK / Vertex Gemini ]
-      │  authenticated tool calls → FastAPI Tool Server only
-      └── Agents NEVER access Firestore directly
+[ Human APPROVE / REJECT ]
+      │ fixed browser action → BFF → private Control API
+      └─ server-side ApprovalGate → mutation + HUMAN_DECISION
 ```
 
-### Rules
+Only `studiogrid-web` is public. Unauthenticated calls to the Control API and Tool Server are denied by Cloud Run IAM.
 
-- All state mutations pass through the FastAPI Tool Server
-- Agents (Gemini / Google ADK) never access Firestore directly
-- All mutations: schema validation → authorization → approval gate → audit log
-- Human Approval Gates block destructive mutations
-- No secrets in code, environment files, or Git history
+## Public input boundary
 
-### Secrets Policy
+The public Next.js route:
 
-| Secret | Storage |
-|--------|---------|
-| Partner API keys | Google Secret Manager only |
-| Gemini API key (if explicit) | Google Secret Manager only |
-| Firestore credentials | Application Default Credentials (ADC) — no key files |
-| Google ADK / Agent Engine credentials | ADC — no key files |
-| Any credential | Never in Git, never in .env committed |
+- accepts only RESET, fixed ACTOR_DELAY, APPROVE, REJECT, and CHECK_COVERAGE operations;
+- caps request bodies at 2048 bytes;
+- validates identifiers and exact actor/delay pairs;
+- applies a demo session/IP rate limiter;
+- keeps the demo session in an HTTP-only, Secure, SameSite=Lax cookie;
+- never exposes private backend URLs or identity tokens to the browser.
 
-### Human Approval Required For
+The rate limiter is an in-process demo control and is not presented as a general distributed abuse-prevention system. The verified Cloud Run web service is capped to one instance for demo stability/cost control.
 
-1. Schedule changes (`approve_schedule_proposal`)
-2. Continuity alert overrides (`resolve_continuity_alert` override)
-3. CRITICAL / HIGH risk resolution (`resolve_risk`)
-4. Marking scenes COMPLETE with open coverage alerts
-5. Deleting production data
-6. Wrapping a shoot day
+## Prompt-injection defense
 
-### Partner Integration
+The cloud demo does not accept arbitrary user prompts. Extra fields are rejected by Pydantic (`extra = forbid`). Safety does not rely on prompt wording:
 
-Partner integration status is `NOT_CONFIGURED` until official contest partner
-runtime requirements are confirmed. No fake connections claimed.
+- agents can create only PENDING schedule proposals;
+- approve/reject/wrap/delete tools are HUMAN-only;
+- high-impact state transitions are checked server-side;
+- an AGENT or SYSTEM caller is rejected even if model instructions are compromised.
 
-### Rate Limiting
+Tests: `tests/unit/test_phase2_agents.py`, `tests/unit/test_approval_gates.py`, and `tests/unit/test_tool_authorization.py`.
 
-Rate limiting is architecturally planned via Cloud Armor / FastAPI middleware.
-Implementation in Phase 2 (Cloud Run deployment).
+## Tool and state rules
+
+- Agents call narrow typed capabilities, not a generic database tool.
+- Agents never access Firestore directly.
+- Tool Registry checks caller identity/type, schema, referenced entities, and state transitions.
+- Agent execution IDs and correlation IDs must match their tool envelope.
+- Invalid mutations fail closed and do not create a proposal.
+- Human decisions are stored as separate auditable events.
+
+## Secrets policy
+
+| Material | Policy |
+|---|---|
+| Cloud credentials | ADC/workload identity; never service-account JSON in Git |
+| Cloud Run ID tokens | Created server-side in memory; never logged or committed |
+| Gemini access | Vertex AI identity; no browser API key |
+| Environment configuration | Local `.env*` ignored; no secret values in examples |
+| Future external credentials | Secret Manager only after an integration is explicitly implemented |
+
+Repository and submission evidence must exclude private keys, ADC files, refresh tokens, identity tokens, email credentials, raw prompts, chain-of-thought, and customer data.
+
+## Safe evidence
+
+Allowed evidence is limited to operational metadata such as resource name, service/revision, model, agent, execution/correlation/session IDs, duration, tool name, status, and evidence references. Screenshots must hide account/profile information and unrelated cloud resources.
+
+## Human approval requirements
+
+At minimum, a HUMAN caller is required for:
+
+1. schedule proposal approval;
+2. schedule proposal rejection;
+3. wrapping a shoot day;
+4. deleting production data;
+5. high/critical risk or continuity resolution where configured.
+
+The public cloud golden flow verifies the schedule approval/rejection boundary.
+
+## Demo data
+
+LAST LIGHT is fictional synthetic production data. The public demo is not approved for customer, personal, confidential studio, or regulated data.
+
+## Known security scope
+
+- This is a hackathon demo, not a claim of legal or industry compliance certification.
+- No real production integration is configured.
+- Cloud resource IAM must be rechecked before every public demonstration.
+- Submitted screenshots/video must be reviewed frame-by-frame for incidental secrets.

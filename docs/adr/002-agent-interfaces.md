@@ -1,7 +1,7 @@
 # ADR 002 — Agent Interfaces and AI Boundary
 
 **Status:** Accepted
-**Date:** 2025
+**Date:** August 2026
 **Milestone:** STUDIOGRID_AI_PRODUCTION_CONTROL_MVP_1
 
 ## Context

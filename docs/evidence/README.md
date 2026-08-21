@@ -1,86 +1,43 @@
-# StudioGrid AI — Contest Evidence
+# StudioGrid AI evidence
 
-This directory contains evidence of **real** development and execution actions
-for the Google Agentic Cinema contest submission.
+This directory contains safe, reproducible evidence for the deployed StudioGrid cloud product. It is contest-neutral historical product evidence; the current All Things Agentic submission package is in [`../all-things-agentic/`](../all-things-agentic/).
 
-No evidence is backdated, fabricated, or mocked.
+Never add credentials, identity tokens, service-account JSON, ADC files, raw prompts, chain-of-thought, private customer data, or unrelated cloud-console information.
 
----
+## Verified cloud artifacts
 
-## Evidence Categories
+### Vertex AI Agent Engine
 
-Evidence files are added as the project is built and deployed.
+[`agent-engine-cloud-3b.json`](agent-engine-cloud-3b.json) records:
 
-### `ibm_bob/`
-IBM Bob development session evidence.
-- Session summaries (sanitized, no credentials)
-- File creation logs
-- Build/test results from Bob sessions
+- deployed Agent Engine resource and region;
+- `gemini-3.6-flash`;
+- Google ADK remote Schedule and Coverage execution;
+- authenticated private Tool Server;
+- Firestore PENDING proposal and coverage alert;
+- safe execution/tool metadata;
+- failure probe with zero invalid mutation;
+- sampled Cloud Trace identifier.
 
-### `gemini/`
-Real Gemini execution traces (Phase 2).
-- Sanitized JSON execution traces
-- Agent execution records (`AgentExecution` schema)
-- Tool call records
-- No API keys, no private data
+It intentionally excludes prompts, messages, credentials, and chain-of-thought.
 
-### `agent_builder/`
-Google ADK / Vertex AI Agent Engine execution logs (Phase 2).
-- Agent run records
-- Tool call sequences
-- Correlation IDs
+### Public cloud demo control plane
 
-### `cloud/`
-Cloud Run deployment evidence (Phase 2).
-- Deployment screenshots
-- Cloud Run service URLs
-- Build logs (sanitized)
+[`cloud-demo-3c/deployment.json`](cloud-demo-3c/deployment.json) records the verified public/private Cloud Run boundary, revisions, bounded scaling, runtime identities, no-localhost browser assertions, and golden-flow results.
 
-### `tests/`
-Test run results.
-- pytest output
-- Vitest output
-- Coverage reports
+[`cloud-demo-3c/browser-verification.md`](cloud-demo-3c/browser-verification.md) records EN/RU/mobile, ACT_02 approval, refresh persistence, Coverage, and final reset behavior.
 
-### `demo/`
-Demo scenario execution evidence.
-- Demo day scenario run
-- Schedule proposal approval trace
-- Continuity alert resolution trace
-- Wrap report generation
+[`cloud-demo-3c/README.md`](cloud-demo-3c/README.md) is the capture checklist and explicitly marks any console image that was not produced. Missing images must never be fabricated.
 
----
+## Development assistance history
 
-## Rules
+[`../IBM_BOB_DEVELOPMENT_LOG.md`](../IBM_BOB_DEVELOPMENT_LOG.md) is a preserved Phase 1 development-assistance log. It is not runtime evidence. Generated `Date: 2025` metadata was corrected transparently to `August 2026`; Git history retains the original lines. See [`../all-things-agentic/PROJECT_CHRONOLOGY.md`](../all-things-agentic/PROJECT_CHRONOLOGY.md).
 
-1. **No credentials** — no API keys, tokens, passwords, private keys
-2. **No key files** — no service account JSON, no gcloud credentials
-3. **No private reasoning traces** — no internal model chain-of-thought
-4. **Sanitized traces are acceptable** — execution IDs, tool names, schemas, results
-5. **Screenshots of real execution are acceptable**
-6. **No fabricated evidence** — if something is not yet implemented, that section is empty
+## Evidence rules
 
----
-
-## IBM Bob Development Evidence
-
-Primary IBM Bob evidence: [`../IBM_BOB_DEVELOPMENT_LOG.md`](../IBM_BOB_DEVELOPMENT_LOG.md)
-
-The log records every real action taken by IBM Bob during development:
-- Files created
-- Commands executed
-- Tests run
-- Architecture decisions made
-
----
-
-## Blocking Compliance Question
-
-**Status: UNRESOLVED — requires user action**
-
-> "Does demonstrated IBM Bob usage satisfy the IBM partner-service requirement,
-> or must the runtime also call a specific IBM MCP / IBM service / IBM API
-> at contest submission time?"
-
-This question must be answered from official contest resources before
-any IBM runtime integration is implemented.
+- Prefer direct resource/API results and durable product state.
+- Distinguish Git evidence, generated document claims, and filesystem metadata.
+- Use synthetic LAST LIGHT data only.
+- Redact browser profile details, account email, billing, and unrelated resources.
+- A screenshot is evidence only if captured from the deployed product/cloud state it claims to show.
+- A generated Markdown statement is not automatically proof of the underlying event.

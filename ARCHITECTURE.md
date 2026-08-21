@@ -1,115 +1,118 @@
-# StudioGrid AI — Architecture
+# StudioGrid AI — architecture
 
-## Overview
+## Current verified deployment
 
-StudioGrid AI is an event-driven, multi-agent production control system for film shoots.
-It continuously tracks planned vs actual shooting state, detects problems, forecasts
-consequences, and proposes next best actions — always subject to human approval.
+StudioGrid is an event-driven, multi-agent production control system for the synthetic LAST LIGHT shoot. It separates the public browser, private control plane, managed agent runtime, private typed tools, durable state, and human authority.
 
-## System Layers
+The submission diagram is maintained as:
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Frontend — Next.js / TypeScript (Cloud Run)                │
-│  Dashboard · Timeline · Scene Board · Coverage              │
-│  Continuity · Schedule · Report                             │
-└────────────────────────┬────────────────────────────────────┘
-                         │ REST + SSE (HTTPS)
-┌────────────────────────▼────────────────────────────────────┐
-│  FastAPI Tool Server (Cloud Run)                            │
-│  Tool Registry · Approval Gates · Schema Validation         │
-│  Audit Logger · SSE Event Stream                            │
-└──────────┬──────────────────────────┬───────────────────────┘
-           │ tool calls only          │ ADC (no key files)
-┌──────────▼──────────┐   ┌──────────▼───────────────────────┐
-│  Google ADK         │   │  Firestore                       │
-│  Gemini 3.6 Flash   │   │  Cloud Logging / Trace           │
-│  Orchestrator       │   │  Secret Manager                  │
-│                     │   │  Cloud Storage                   │
-│  SCHEDULE_AGENT     │   └──────────────────────────────────┘
-│  COVERAGE_AGENT     │
-│  CONTINUITY_AGENT   │   Phase 1: LocalStateStore (in-memory)
-│  RISK_AGENT         │   Phase 1: LocalEventBus (in-process)
-│  WRAP_REPORT_AGENT  │
-└─────────────────────┘
+- Source: [docs/all-things-agentic/architecture.mmd](docs/all-things-agentic/architecture.mmd)
+- Render: [docs/all-things-agentic/assets/studiogrid-architecture.png](docs/all-things-agentic/assets/studiogrid-architecture.png)
+
+```text
+PUBLIC BROWSER
+  → PUBLIC CLOUD RUN: studiogrid-web
+  → server-side authenticated Next.js BFF
+  → PRIVATE CLOUD RUN: studiogrid-control-api
+  → VERTEX AI AGENT ENGINE
+  → GOOGLE ADK PRODUCTION_ORCHESTRATOR
+      ├─ SCHEDULE_AGENT
+      └─ COVERAGE_AGENT
+  ↔ GEMINI 3.6 FLASH
+  → authenticated typed tools
+  → PRIVATE CLOUD RUN: studiogrid-tool-server
+  → FIRESTORE
+
+PENDING proposal
+  → HUMAN APPROVE / REJECT (outside AI authority)
+  → Control API
+  → schedule mutation or rejection + HUMAN_DECISION
+  → Firestore
 ```
 
-## Key Principles
+## Deployed resources
 
-### 1. FACT / INFERENCE / RECOMMENDATION / HUMAN_DECISION
+| Component | Resource/purpose |
+|---|---|
+| Public web | Cloud Run `studiogrid-web`; judge-facing Next.js UI and server-side BFF |
+| Private control | Cloud Run `studiogrid-control-api`; fixed demo operations and human decision boundary |
+| Managed agent runtime | `projects/729921508335/locations/europe-west3/reasoningEngines/5132986471388545024` |
+| Agent framework | Google ADK 2.6.3 |
+| Model | `gemini-3.6-flash` through Vertex AI |
+| Private tools | Cloud Run `studiogrid-tool-server`; typed create operations for agents |
+| Durable state | Firestore application state, proposals, alerts, events, sessions, and safe execution evidence |
+| Telemetry | Cloud Trace plus execution/correlation metadata |
 
-These four categories are always kept separate and visually distinct in the UI.
+## Agent graph
 
-- **FACT**: Recorded evidence (e.g., Maya Reed reported unavailable until 11:30)
-- **INFERENCE**: AI-derived conclusion (e.g., Scenes 14 and 18 cannot currently be shot)
-- **RECOMMENDATION**: Agent proposal (e.g., Advance Scene 22)
-- **HUMAN_DECISION**: Explicit human approval or rejection
+| Agent | Input | Allowed operational output |
+|---|---|---|
+| `PRODUCTION_ORCHESTRATOR` | Structured event plus server-built context | Transfer to Schedule or Coverage specialist |
+| `SCHEDULE_AGENT` | Actor delay, schedule, actor/scene relationships, eligible scenes, locations, dependencies, daylight | PENDING schedule proposal via `create_schedule_proposal` |
+| `COVERAGE_AGENT` | Planned/completed shot facts for a scene | OPEN coverage alert via `create_coverage_alert` |
 
-### 2. Agents Never Mutate State Directly
+Agents do not receive general database access and do not receive the human approval tools.
 
-All state changes flow through:
+## State and event model
+
+State changes are represented with typed Pydantic objects. Operational evidence separates:
+
+- **FACT** — recorded production input;
+- **INFERENCE** — derived consequence;
+- **RECOMMENDATION** — proposed action;
+- **HUMAN_DECISION** — explicit approval or rejection.
+
+Firestore persists the public demo's application state and audit evidence. The UI reloads state through the private control path; approved state surviving refresh is a durability assertion.
+
+## Mutation path
+
+```text
+Agent
+  → typed tool call
+  → IAM-private Tool Server
+  → caller authorization
+  → Pydantic/schema/state validation
+  → PENDING proposal or OPEN alert
+  → Firestore + safe execution trace
+
+Human
+  → fixed APPROVE/REJECT action
+  → authenticated BFF
+  → private Control API
+  → server-side ApprovalGate
+  → state mutation + HUMAN_DECISION
+  → Firestore
 ```
-Agent → Tool Call → Tool Registry → Authorization Check →
-Approval Gate → Schema Validation → State Store → Audit Log
-```
 
-### 3. Human Approval Gates
+## Security boundaries
 
-No schedule change, continuity override, or critical risk resolution
-happens without explicit human confirmation.
+1. Only the web service is public.
+2. The web runtime identity may invoke only the private Control API.
+3. The Agent Engine runtime identity invokes the private Tool Server.
+4. Agents never access Firestore directly.
+5. Request schemas forbid arbitrary prompt fields in the public demo.
+6. Agent-created schedule proposals must be PENDING and reference known scenes.
+7. `ApprovalGate` rejects AGENT/SYSTEM approve and reject calls.
+8. Evidence includes safe operational metadata, not credentials, raw prompts, or chain-of-thought.
 
-### 4. Event-Driven Architecture
+## Failure behavior
 
-All state changes are triggered by typed `ProductionEvent` objects.
-The Event Bus dispatches to all subscribed agents. Events are immutable.
+- Invalid tool mutations fail closed.
+- Tool failures produce safe error codes and ERROR execution evidence.
+- The verified invalid-scene probe created no new proposal.
+- Firestore initialization failure disables the real-agent path rather than continuing with an unverified durable state.
+- Agent Engine and Cloud Run scale from zero; cold-start latency is expected and does not grant a fallback authority path.
 
-## Agent Architecture
+## Historical Phase 1 components
 
-| Agent | Responsibility |
-|-------|----------------|
-| PRODUCTION_ORCHESTRATOR | Coordinates all agents, routes events |
-| SCRIPT_BREAKDOWN_AGENT | Parses production package into typed domain model |
-| SCHEDULE_AGENT | Detects conflicts, creates schedule proposals |
-| COVERAGE_AGENT | Tracks planned vs completed shots, creates coverage alerts |
-| CONTINUITY_AGENT | Detects continuity conflicts between shots |
-| PRODUCTION_RISK_AGENT | Aggregates and prioritizes production risks |
-| WRAP_REPORT_AGENT | Generates end-of-day report from actual state |
+The repository also contains deterministic Continuity, Risk, and Wrap agents from Phase 1. They remain useful domain/test artifacts but are not represented as deployed Vertex AI Agent Engine specialists in the public golden flow. The verified cloud claim is limited to Production Orchestrator, Schedule Agent, and Coverage Agent.
 
-## Google Cloud Stack (Phase 2)
+## ADR index
 
-| Service | Purpose |
-|---------|---------|
-| Gemini | LLM inference for all agents |
-| Google ADK | Real local multi-agent orchestration |
-| Vertex AI Agent Engine | Prepared `AdkApp`; deployment pending IAM confirmation |
-| Cloud Run | FastAPI tool server + Next.js frontend |
-| Firestore | Production state storage |
-| Cloud Logging | Structured audit trail with correlation IDs |
-| Secret Manager | Partner credentials only |
-| Cloud Storage | Production assets |
-| IAM + ADC | Authentication — no key files |
-
-## Phase 1 vs Phase 2
-
-| Capability | Phase 1 | Phase 2 |
-|-----------|---------|---------|
-| Domain model | ✅ Complete | ✅ |
-| Event system | ✅ LocalEventBus | Cloud Pub/Sub |
-| Agents | ✅ Deterministic | ✅ Real Gemini 3.6 Flash + Google ADK |
-| State store | ✅ In-memory | ✅ Firestore durable mirror |
-| Dashboard | ✅ Deterministic status | ✅ Honest live runtime status |
-| Cloud Run | ❌ | ✅ |
-| Partner integration | NOT_CONFIGURED | TBD after requirement confirmed |
-
-## ADR Index
-
-- [ADR 001 — Event-Driven State](docs/adr/001-event-driven-state.md)
-- [ADR 002 — Agent Interfaces](docs/adr/002-agent-interfaces.md)
-- [ADR 003 — Human Approval Gates](docs/adr/003-human-approval-gates.md)
-- [ADR 005 — Google ADK and Vertex AI Agent Runtime](docs/adr/005-google-agent-runtime-integration.md)
-
-## Demo Film
-
-**LAST LIGHT** — a fully original synthetic film production dataset.
-All characters, actors, locations, and props are fictional.
-No real IP, no existing scripts, no protected content.
+- [ADR 001 — Event-driven state](docs/adr/001-event-driven-state.md)
+- [ADR 002 — Agent interfaces](docs/adr/002-agent-interfaces.md)
+- [ADR 003 — Human approval gates](docs/adr/003-human-approval-gates.md)
+- [ADR 005 — Google agent runtime integration](docs/adr/005-google-agent-runtime-integration.md)
+- [ADR 006 — Private Cloud Run Tool Server](docs/adr/006-private-cloud-run-tool-server.md)
+- [ADR 007 — Vertex Agent Engine cloud runtime](docs/adr/007-vertex-agent-engine-cloud-runtime.md)
+- [ADR 008 — Cloud demo control plane](docs/adr/008-cloud-demo-control-plane.md)

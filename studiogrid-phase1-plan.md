@@ -39,7 +39,7 @@ All dashboard counts are calculated from the LAST LIGHT dataset state, never har
 
 1. Create `.gitignore` with entries for: Python cache, venv, Node modules, .next, .env*, .env.local, service-account*.json, gcloud-*.json, application_default_credentials.json, *.log, .DS_Store, coverage/
 2. Create `.env.example` with commented variables (APP_ENV, API_HOST, API_PORT, CORS_ORIGINS, GOOGLE_CLOUD_PROJECT commented out, GEMINI_MODEL commented out, PARTNER_SERVICE commented out, NEXT_PUBLIC_API_URL, NEXT_PUBLIC_APP_ENV)
-3. Create `LICENSE` вЂ” MIT License, copyright 2025 StudioGrid AI Contributors
+3. Create `LICENSE` вЂ” MIT License, copyright 2026 StudioGrid AI Contributors
 4. Create `SECURITY.md` вЂ” security policy, trust boundaries, secrets policy, human approval gates list
 5. Create `README.md` вЂ” full English documentation (see content spec below)
 6. Create `README.ru.md` вЂ” full Russian documentation
