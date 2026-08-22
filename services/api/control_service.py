@@ -722,6 +722,10 @@ class DemoControlService:
         ]
 
     async def get_state(self, demo_session_id: str) -> dict[str, Any]:
+        async with self._mutation_lock:
+            return await self._get_state_unlocked(demo_session_id)
+
+    async def _get_state_unlocked(self, demo_session_id: str) -> dict[str, Any]:
         await self._sync_state()
         session = await self._ensure_session(demo_session_id)
         day = self._day()

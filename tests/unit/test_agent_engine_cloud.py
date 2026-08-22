@@ -1,6 +1,7 @@
 """Unit coverage for the deployable StudioGrid Agent Engine graph."""
 from __future__ import annotations
 
+import asyncio
 import json
 from datetime import datetime
 from types import SimpleNamespace
@@ -132,6 +133,28 @@ class _MemoryPersistence:
 
     async def list_events(self, limit=100):
         return list(reversed(self.events[-limit:]))
+
+
+class _InterleavingMemoryPersistence(_MemoryPersistence):
+    """Pauses one state write so a concurrent state read can exercise the race."""
+
+    def __init__(self, store):
+        super().__init__(store)
+        self._block_next_state_save = False
+        self.state_save_blocked = asyncio.Event()
+        self.release_state_save = asyncio.Event()
+
+    def block_next_state_save(self):
+        self._block_next_state_save = True
+        self.state_save_blocked.clear()
+        self.release_state_save.clear()
+
+    async def save_application_state(self, store):
+        if self._block_next_state_save:
+            self._block_next_state_save = False
+            self.state_save_blocked.set()
+            await self.release_state_save.wait()
+        await super().save_application_state(store)
 
 
 class _DemoRemote:
@@ -509,6 +532,58 @@ async def test_cloud_demo_human_approval_reject_reset_and_coverage(store):
     assert coverage["coverage"]["fact"]["missingShotIds"] == ["SH_12", "SH_13"]
     assert coverage["coverage"]["alert"]["missingShotIds"] == ["SH_12", "SH_13"]
     assert all(value == "CONNECTED" for value in coverage["runtime"].values())
+
+
+@pytest.mark.asyncio
+async def test_cloud_demo_coverage_serializes_state_reads_during_shot_transition(store):
+    """Polling state cannot roll SH_11 back between its two legal transitions."""
+    persistence = _InterleavingMemoryPersistence(store)
+    registry = ToolRegistry(
+        store=store,
+        event_bus=LocalEventBus(),
+        persistence=persistence,
+    )
+    service = DemoControlService(
+        store=store,
+        registry=registry,
+        persistence=persistence,
+        remote=_DemoRemote(persistence),
+    )
+    session_id = "coverage-race-session-0001"
+
+    reset = await service.reset(session_id)
+    assert reset["production"]["completedShotCount"] == 3
+    assert store.shots["SH_11"].status == ShotStatus.PLANNED
+    assert reset["coverage"] == {"fact": None, "alert": None}
+
+    persistence.block_next_state_save()
+    coverage_task = asyncio.create_task(service.check_coverage(session_id))
+    await asyncio.wait_for(persistence.state_save_blocked.wait(), timeout=1)
+
+    polling_read = asyncio.create_task(service.get_state(session_id))
+    await asyncio.sleep(0)
+    await asyncio.sleep(0)
+    assert not polling_read.done(), "State polling must wait for the coverage mutation"
+
+    persistence.release_state_save.set()
+    coverage = await asyncio.wait_for(coverage_task, timeout=2)
+    persisted = await asyncio.wait_for(polling_read, timeout=2)
+
+    assert store.shots["SH_11"].status == ShotStatus.COMPLETE
+    assert store.shots["SH_12"].status == ShotStatus.PLANNED
+    assert store.shots["SH_13"].status == ShotStatus.PLANNED
+    assert coverage["production"]["completedShotCount"] == 4
+    assert coverage["coverage"]["fact"]["missingShotIds"] == ["SH_12", "SH_13"]
+    assert coverage["coverage"]["alert"]["missingShotIds"] == ["SH_12", "SH_13"]
+    assert persisted["coverage"] == coverage["coverage"]
+
+    transition_types = [
+        event["type"]
+        for event in persistence.events
+        if event["payload"].get("shotId") == "SH_11"
+    ]
+    assert EventType.SHOT_STARTED.value in transition_types
+    assert EventType.SHOT_COMPLETED.value in transition_types
 
 
 @pytest.mark.asyncio
