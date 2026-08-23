@@ -91,11 +91,10 @@ function coverageState(): DemoState {
 function scheduleState(): DemoState {
   const baseline = baselineState();
   const before = [scheduleEntry(1, "SC_01"), scheduleEntry(2, "SC_05")];
-  const after = [{ ...scheduleEntry(1, "SC_05"), changed: true }, { ...scheduleEntry(2, "SC_01"), changed: true }];
   return {
     ...baseline,
     commandRouting: { provider: "Google Vertex AI", modelName: "gemini-3.6-flash", intent: "ACTOR_DELAY", target: "SCHEDULE_AGENT", summary: "Route the exact actor delay to schedule replanning." },
-    schedule: { current: before, before, after },
+    schedule: { current: before, before, after: null },
     proposal: {
       proposalId: "proposal-1", shootDayId: "DAY_01", status: "PENDING", originAgent: "SCHEDULE_AGENT", category: "RECOMMENDATION",
       proposedChanges: [{ changeType: "REORDER", sceneId: "SC_05", fromPosition: 2, toPosition: 1, reason: "Maya-independent work" }],
