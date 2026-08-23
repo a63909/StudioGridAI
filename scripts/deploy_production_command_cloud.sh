@@ -3,7 +3,7 @@ set -euo pipefail
 
 PROJECT="studiogrid-ai"
 REGION="europe-west3"
-ARTIFACT_REPOSITORY="studiogrid"
+DEFAULT_ARTIFACT_REPOSITORY="studiogrid"
 CONTROL_SERVICE="studiogrid-control-api"
 WEB_SERVICE="studiogrid-web"
 
@@ -21,15 +21,55 @@ if [[ ! -f Dockerfile || ! -f apps/web/Dockerfile ]]; then
 fi
 
 GIT_SHA="$(git rev-parse --short=12 HEAD)"
-REGISTRY="${REGION}-docker.pkg.dev/${PROJECT}/${ARTIFACT_REPOSITORY}"
-CONTROL_IMAGE="${REGISTRY}/control-api:production-command-${GIT_SHA}"
-WEB_IMAGE="${REGISTRY}/web:production-command-${GIT_SHA}"
-
 echo "Deploying StudioGrid Production Command from ${GIT_SHA}"
 gcloud config set project "${PROJECT}" >/dev/null
+
+# Reuse the Artifact Registry Docker repository already backing the deployed
+# Control API when possible. This avoids assuming a repository name that may
+# differ between projects/deployment methods.
+CURRENT_CONTROL_IMAGE="$(gcloud run services describe "${CONTROL_SERVICE}" \
+  --project="${PROJECT}" \
+  --region="${REGION}" \
+  --format='value(spec.template.spec.containers[0].image)' 2>/dev/null || true)"
+
+ARTIFACT_REPOSITORY=""
+EXPECTED_PREFIX="${REGION}-docker.pkg.dev/${PROJECT}/"
+if [[ "${CURRENT_CONTROL_IMAGE}" == "${EXPECTED_PREFIX}"* ]]; then
+  IMAGE_REMAINDER="${CURRENT_CONTROL_IMAGE#${EXPECTED_PREFIX}}"
+  ARTIFACT_REPOSITORY="${IMAGE_REMAINDER%%/*}"
+fi
+
+if [[ -z "${ARTIFACT_REPOSITORY}" ]]; then
+  ARTIFACT_REPOSITORY="$(gcloud artifacts repositories list \
+    --project="${PROJECT}" \
+    --location="${REGION}" \
+    --filter='format=DOCKER' \
+    --format='value(name)' 2>/dev/null \
+    | head -n 1 \
+    | sed 's#.*/##' || true)"
+fi
+
+if [[ -z "${ARTIFACT_REPOSITORY}" ]]; then
+  ARTIFACT_REPOSITORY="${DEFAULT_ARTIFACT_REPOSITORY}"
+  echo "No Docker Artifact Registry repository found in ${REGION}; creating ${ARTIFACT_REPOSITORY}."
+  gcloud artifacts repositories create "${ARTIFACT_REPOSITORY}" \
+    --project="${PROJECT}" \
+    --location="${REGION}" \
+    --repository-format=docker \
+    --description="StudioGrid deployment images" \
+    --quiet
+fi
+
+# Fail early if the detected/created repository is not usable.
 gcloud artifacts repositories describe "${ARTIFACT_REPOSITORY}" \
   --project="${PROJECT}" \
   --location="${REGION}" >/dev/null
+
+echo "Artifact Registry repository: ${ARTIFACT_REPOSITORY}"
+
+REGISTRY="${REGION}-docker.pkg.dev/${PROJECT}/${ARTIFACT_REPOSITORY}"
+CONTROL_IMAGE="${REGISTRY}/control-api:production-command-${GIT_SHA}"
+WEB_IMAGE="${REGISTRY}/web:production-command-${GIT_SHA}"
 
 # Build from the existing canonical Dockerfiles.
 gcloud builds submit \
