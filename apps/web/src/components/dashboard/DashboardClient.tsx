@@ -45,9 +45,14 @@ function ClassificationBadge({ value }: { value: DemoTimelineEntry["classificati
   return <span className={`rounded border px-2 py-0.5 font-mono text-[10px] ${classes}`}>{value.replace("_", " ")}</span>;
 }
 
-export function DashboardClient() {
+export function DashboardClient({
+  state,
+  onState,
+}: {
+  state: DemoState | null;
+  onState: (state: DemoState) => void;
+}) {
   const t = useTranslations("cloudDemo");
-  const [state, setState] = useState<DemoState | null>(null);
   const [selectedActor, setSelectedActor] = useState<"ACT_02" | "ACT_03">("ACT_02");
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -57,12 +62,12 @@ export function DashboardClient() {
       const response = await fetch("/api/demo", { cache: "no-store" });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload?.error?.message || t("errors.load"));
-      setState(payload);
+      onState(payload);
       setError(null);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : t("errors.load"));
     }
-  }, [t]);
+  }, [onState, t]);
 
   useEffect(() => {
     const initialLoad = window.setTimeout(() => void load(), 0);
@@ -80,7 +85,7 @@ export function DashboardClient() {
       const response = await fetch("/api/demo", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(action) });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload?.error?.message || t("errors.action"));
-      setState(payload);
+      onState(payload);
     } catch (actionError) {
       setError(actionError instanceof Error ? actionError.message : t("errors.action"));
       await load();

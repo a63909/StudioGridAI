@@ -47,7 +47,11 @@ const EXAMPLES = {
   },
 } as const;
 
-export function ProductionCommandCard() {
+export function ProductionCommandCard({
+  onState,
+}: {
+  onState?: (state: DemoState) => void;
+}) {
   const locale = useLocale() === "ru" ? "ru" : "en";
   const copy = COPY[locale];
   const examples = EXAMPLES[locale];
@@ -73,6 +77,7 @@ export function ProductionCommandCard() {
       const payload = (await response.json()) as DemoState & { error?: { message?: string } };
       if (!response.ok) throw new Error(payload.error?.message || copy.error);
       setRouting(payload.commandRouting || null);
+      onState?.(payload);
     } catch (submissionError) {
       setError(submissionError instanceof Error ? submissionError.message : copy.error);
     } finally {

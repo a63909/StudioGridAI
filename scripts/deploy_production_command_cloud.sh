@@ -6,6 +6,7 @@ REGION="europe-west3"
 DEFAULT_ARTIFACT_REPOSITORY="studiogrid"
 CONTROL_SERVICE="studiogrid-control-api"
 WEB_SERVICE="studiogrid-web"
+TOOL_SERVICE="studiogrid-tool-server"
 
 if ! command -v gcloud >/dev/null 2>&1; then
   echo "gcloud is required" >&2
@@ -13,6 +14,10 @@ if ! command -v gcloud >/dev/null 2>&1; then
 fi
 if ! command -v git >/dev/null 2>&1; then
   echo "git is required" >&2
+  exit 1
+fi
+if ! command -v python >/dev/null 2>&1; then
+  echo "python is required" >&2
   exit 1
 fi
 if [[ ! -f Dockerfile || ! -f apps/web/Dockerfile ]]; then
@@ -23,6 +28,26 @@ fi
 GIT_SHA="$(git rev-parse --short=12 HEAD)"
 echo "Deploying StudioGrid Production Command from ${GIT_SHA}"
 gcloud config set project "${PROJECT}" >/dev/null
+
+TEMP_DIR="$(mktemp -d)"
+trap 'rm -rf "${TEMP_DIR}"' EXIT
+
+snapshot_runtime() {
+  local phase="$1"
+  local service
+  for service in "${CONTROL_SERVICE}" "${WEB_SERVICE}" "${TOOL_SERVICE}"; do
+    gcloud run services describe "${service}" \
+      --project="${PROJECT}" \
+      --region="${REGION}" \
+      --format=json >"${TEMP_DIR}/${phase}-${service}.json"
+    gcloud run services get-iam-policy "${service}" \
+      --project="${PROJECT}" \
+      --region="${REGION}" \
+      --format=json >"${TEMP_DIR}/${phase}-${service}-iam.json"
+  done
+}
+
+snapshot_runtime before
 
 # Reuse the Artifact Registry Docker repository already backing the deployed
 # Control API when possible. This avoids assuming a repository name that may
@@ -98,6 +123,85 @@ gcloud run deploy "${WEB_SERVICE}" \
   --image="${WEB_IMAGE}" \
   --quiet
 
+snapshot_runtime after
+
+# A deploy is allowed to create revisions and change only the two container
+# images. Fail closed if IAM, service identity, env vars, ingress, or the Tool
+# Server changed. This script contains no IAM mutation commands.
+SNAPSHOT_DIR="${TEMP_DIR}" \
+CONTROL_SERVICE="${CONTROL_SERVICE}" \
+WEB_SERVICE="${WEB_SERVICE}" \
+TOOL_SERVICE="${TOOL_SERVICE}" \
+python - <<'PY'
+import json
+import os
+from pathlib import Path
+
+root = Path(os.environ["SNAPSHOT_DIR"])
+
+
+def load(phase: str, service: str, suffix: str = ""):
+    return json.loads((root / f"{phase}-{service}{suffix}.json").read_text())
+
+
+def normalized(value):
+    if isinstance(value, dict):
+        return {key: normalized(value[key]) for key in sorted(value)}
+    if isinstance(value, list):
+        items = [normalized(item) for item in value]
+        return sorted(items, key=lambda item: json.dumps(item, sort_keys=True))
+    return value
+
+
+def service_account(document):
+    return document["spec"]["template"]["spec"].get("serviceAccountName")
+
+
+def environment(document):
+    containers = document["spec"]["template"]["spec"].get("containers") or []
+    return normalized((containers[0] if containers else {}).get("env") or [])
+
+
+def ingress(document):
+    annotations = document.get("metadata", {}).get("annotations", {})
+    return annotations.get("run.googleapis.com/ingress")
+
+
+def require_equal(label, before, after):
+    if normalized(before) != normalized(after):
+        raise AssertionError(f"Protected Cloud Run configuration changed: {label}")
+
+
+for service in (os.environ["CONTROL_SERVICE"], os.environ["WEB_SERVICE"]):
+    before = load("before", service)
+    after = load("after", service)
+    require_equal(f"{service} service account", service_account(before), service_account(after))
+    require_equal(f"{service} environment", environment(before), environment(after))
+    require_equal(f"{service} ingress", ingress(before), ingress(after))
+    require_equal(
+        f"{service} IAM",
+        load("before", service, "-iam"),
+        load("after", service, "-iam"),
+    )
+
+tool = os.environ["TOOL_SERVICE"]
+tool_before = load("before", tool)
+tool_after = load("after", tool)
+require_equal(f"{tool} spec", tool_before.get("spec"), tool_after.get("spec"))
+require_equal(
+    f"{tool} ready revision",
+    tool_before.get("status", {}).get("latestReadyRevisionName"),
+    tool_after.get("status", {}).get("latestReadyRevisionName"),
+)
+require_equal(
+    f"{tool} IAM",
+    load("before", tool, "-iam"),
+    load("after", tool, "-iam"),
+)
+
+print("Protected Cloud Run configuration: PASS")
+PY
+
 CONTROL_URL="$(gcloud run services describe "${CONTROL_SERVICE}" --project="${PROJECT}" --region="${REGION}" --format='value(status.url)')"
 WEB_URL="$(gcloud run services describe "${WEB_SERVICE}" --project="${PROJECT}" --region="${REGION}" --format='value(status.url)')"
 
@@ -115,8 +219,7 @@ echo "Private Control API boundary: PASS (${PRIVATE_STATUS})"
 
 # Public app and BFF must be reachable.
 curl -fsSL "${WEB_URL}" >/dev/null
-COOKIE_JAR="$(mktemp)"
-trap 'rm -f "${COOKIE_JAR}"' EXIT
+COOKIE_JAR="${TEMP_DIR}/cookies.txt"
 curl -fsSL -c "${COOKIE_JAR}" "${WEB_URL}/api/demo" >/dev/null
 
 # Reset the synthetic session, then prove the Taskmaster-style Coverage command:
@@ -145,18 +248,27 @@ routing = payload.get("commandRouting") or {}
 coverage = payload.get("coverage") or {}
 alert = coverage.get("alert") or {}
 runtime = payload.get("runtime") or {}
+evidence = payload.get("technicalEvidence") or {}
+fact = coverage.get("fact") or {}
 
 assert routing.get("intent") == "CHECK_COVERAGE", routing
 assert routing.get("target") == "COVERAGE_AGENT", routing
+assert routing.get("modelName") == "gemini-3.6-flash", routing
 assert alert.get("status") == "OPEN", alert
+assert alert.get("sceneId") == "SC_05", alert
+assert sorted(alert.get("missingShotIds") or []) == ["SH_12", "SH_13"], alert
+assert sorted(fact.get("missingShotIds") or []) == ["SH_12", "SH_13"], fact
 assert runtime.get("agentEngine") == "CONNECTED", runtime
 assert runtime.get("gemini") == "CONNECTED", runtime
 assert runtime.get("privateToolServer") == "CONNECTED", runtime
 assert runtime.get("firestore") == "CONNECTED", runtime
+assert evidence.get("agentName") == "COVERAGE_AGENT", evidence
+assert evidence.get("modelName") == "gemini-3.6-flash", evidence
+assert evidence.get("executionId"), evidence
 
 print("Production Command Coverage smoke: PASS")
-print("Missing shots:", ", ".join((coverage.get("fact") or {}).get("missingShotIds", [])))
-print("Execution ID:", (payload.get("technicalEvidence") or {}).get("executionId"))
+print("Missing shots:", ", ".join(fact.get("missingShotIds", [])))
+print("Execution ID:", evidence.get("executionId"))
 PY
 
 echo "STUDIOGRID_AI_PRODUCTION_COMMAND_CLOUD_OK"

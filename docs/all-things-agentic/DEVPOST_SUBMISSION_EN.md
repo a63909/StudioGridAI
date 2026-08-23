@@ -158,7 +158,7 @@ Recommended path: Reset Demo → Maya Reed 45m → wait for PENDING proposal →
 - Firestore
 - Cloud Trace / Google Cloud telemetry
 - Python 3.12, FastAPI, Pydantic
-- Node.js 20, Next.js 16, React 19, TypeScript
+- Node.js 22, Next.js 16, React 19, TypeScript
 
 ## Data sources
 

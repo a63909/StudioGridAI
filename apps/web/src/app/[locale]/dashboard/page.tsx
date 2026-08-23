@@ -1,11 +1,5 @@
-import { DashboardClient } from "@/components/dashboard/DashboardClient";
-import { ProductionCommandCard } from "@/components/dashboard/ProductionCommandCard";
+import { ProductionCommandDashboard } from "@/components/dashboard/ProductionCommandDashboard";
 
 export default function DashboardPage() {
-  return (
-    <>
-      <ProductionCommandCard />
-      <DashboardClient />
-    </>
-  );
+  return <ProductionCommandDashboard />;
 }

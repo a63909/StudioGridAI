@@ -31,7 +31,11 @@ class CommandRoute(BaseModel):
 
     intent: Literal["ACTOR_DELAY", "CHECK_COVERAGE", "UNSUPPORTED"]
     actorId: Literal["ACT_02", "ACT_03"] | None = None
-    delayMinutes: Literal[30, 45] | None = None
+    # google-genai's Vertex schema adapter currently models enum values as
+    # strings. A numeric Literal therefore fails locally while transforming the
+    # response schema, before Gemini is called. Keep the JSON-schema field as a
+    # bounded integer and enforce the exact actor/minute allowlist below.
+    delayMinutes: int | None = Field(default=None, ge=1, le=240)
     summary: str = Field(min_length=3, max_length=240)
 
     model_config = {"extra": "forbid"}
@@ -104,7 +108,11 @@ class ProductionCommandRouter:
                 config=types.GenerateContentConfig(
                     system_instruction=_SYSTEM_INSTRUCTION,
                     temperature=0,
-                    max_output_tokens=160,
+                    # This boundary is a small deterministic classifier, not a
+                    # reasoning agent. Disabling model thinking keeps the token
+                    # budget available for the complete structured response.
+                    thinking_config=types.ThinkingConfig(thinking_budget=0),
+                    max_output_tokens=256,
                     response_mime_type="application/json",
                     response_schema=CommandRoute,
                 ),
@@ -112,6 +120,8 @@ class ProductionCommandRouter:
             parsed = getattr(response, "parsed", None)
             if isinstance(parsed, CommandRoute):
                 return parsed
+            if isinstance(parsed, dict):
+                return CommandRoute.model_validate(parsed)
             text = getattr(response, "text", None)
             if not isinstance(text, str) or not text.strip():
                 raise CommandRoutingError("COMMAND_ROUTER_EMPTY_RESPONSE")

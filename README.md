@@ -131,7 +131,7 @@ tests/                          Backend tests
 
 - Git
 - Python **3.11+** (Cloud Run image uses Python 3.12)
-- Node.js **20+** and npm (web image uses Node 20)
+- Node.js **22.12+** and npm (web image uses Node 22)
 - Optional: Docker
 - For real cloud mode: a Google Cloud project with billing, `gcloud`, ADC or workload identity, and permission to create/configure the resources described below
 
