@@ -19,8 +19,19 @@ const CONTEXT_COPY = {
     scheduleFact: "Reported production disruption",
     scheduleReady: "The Schedule Agent prepared a production recommendation.",
     scheduleWaiting: "The recommendation is ready. The actual schedule remains unchanged until a human production manager approves it.",
+    scheduleApproved: "A human production manager approved the recommendation. The applied schedule is shown below.",
+    scheduleRejected: "A human production manager rejected the recommendation. The production schedule remains unchanged.",
+    currentOrder: "Current schedule — unchanged",
+    proposedOrder: "Proposed order — not applied",
+    appliedOrder: "Applied schedule",
     otherScenarios: "Other demo scenarios",
     otherScenariosHint: "These controls are secondary test shortcuts and are not part of the active command result.",
+    routingProvider: "Routing provider",
+    routingTarget: "Workflow target",
+    routingIntent: "Validated intent",
+    routingModel: "Classifier model",
+    routingSummary: "Routing summary",
+    technicalDetails: "Technical details",
   },
   ru: {
     currentTask: "Текущая задача агента",
@@ -34,8 +45,19 @@ const CONTEXT_COPY = {
     scheduleFact: "Зафиксированное изменение производства",
     scheduleReady: "Агент расписания подготовил производственную рекомендацию.",
     scheduleWaiting: "Рекомендация готова. Фактическое расписание не изменится, пока руководитель производства не подтвердит её.",
+    scheduleApproved: "Руководитель производства подтвердил рекомендацию. Применённое расписание показано ниже.",
+    scheduleRejected: "Руководитель производства отклонил рекомендацию. Производственное расписание не изменилось.",
+    currentOrder: "Текущее расписание — без изменений",
+    proposedOrder: "Предложенный порядок — не применён",
+    appliedOrder: "Применённое расписание",
     otherScenarios: "Другие демонстрационные сценарии",
     otherScenariosHint: "Эти кнопки — вторичные тестовые ярлыки и не относятся к результату текущей команды.",
+    routingProvider: "Сервис маршрутизации",
+    routingTarget: "Целевой сценарий",
+    routingIntent: "Проверенный тип задачи",
+    routingModel: "Модель-классификатор",
+    routingSummary: "Результат маршрутизации",
+    technicalDetails: "Технические детали",
   },
 } as const;
 
@@ -84,11 +106,13 @@ export function DashboardClient({
   state,
   onState,
   activeIntent,
+  commandRouting,
   onActiveIntentChange,
 }: {
   state: DemoState | null;
   onState: (state: DemoState) => void;
   activeIntent: ActiveIntent | null;
+  commandRouting: CommandRouting | null;
   onActiveIntentChange: (intent: ActiveIntent | null) => void;
 }) {
   const t = useTranslations("cloudDemo");
@@ -145,12 +169,12 @@ export function DashboardClient({
   const after = state.schedule.after;
   const actorDelay = selectedActor === "ACT_02" ? 45 : 30;
   const latestFact = [...state.timeline].reverse().find((item) => item.type === "ACTOR_DELAYED");
-  const durableIntent: ActiveIntent | null = state.technicalEvidence?.agentName === "COVERAGE_AGENT"
-    ? "CHECK_COVERAGE"
-    : state.technicalEvidence?.agentName === "SCHEDULE_AGENT"
-      ? "ACTOR_DELAY"
+  const persistedWorkflow: ActiveIntent | null = state.proposal
+    ? "ACTOR_DELAY"
+    : state.coverage.fact || state.coverage.alert
+      ? "CHECK_COVERAGE"
       : null;
-  const resolvedIntent = activeIntent || state.commandRouting?.intent || durableIntent;
+  const resolvedIntent = activeIntent || commandRouting?.intent || persistedWorkflow;
   const isCoverageTask = resolvedIntent === "CHECK_COVERAGE";
   const isScheduleTask = resolvedIntent === "ACTOR_DELAY";
 
@@ -195,37 +219,18 @@ export function DashboardClient({
 
   return (
     <div className="mx-auto max-w-screen-xl space-y-6 px-4 py-6 sm:py-8">
-      <section className="overflow-hidden rounded-2xl border border-blue-900/70 bg-gradient-to-br from-blue-950 via-neutral-950 to-neutral-950 p-5 sm:p-8">
-        <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
-          <div>
-            <div className="mb-3 inline-flex rounded-full border border-blue-800 bg-blue-950 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-blue-300">{t("cloudDemo")}</div>
-            <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-5xl">StudioGrid AI</h1>
-            <p className="mt-2 text-base text-blue-200 sm:text-lg">{t("subtitle")}</p>
-            <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
-              <span className="text-neutral-400">{t("film")}: <strong className="text-white">{state.production.title}</strong></span>
-              <span className="text-neutral-400">{t("shootDay")}: <strong className="font-mono text-white">{state.production.shootDayId}</strong></span>
-              <span className="rounded-full bg-emerald-950 px-3 py-1 text-xs font-semibold text-emerald-300">{state.production.status}</span>
-            </div>
-          </div>
-          <button className="rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-2 text-sm font-medium text-neutral-200 hover:border-neutral-500 disabled:opacity-50" onClick={() => void run({ operation: "RESET" })} disabled={busy !== null}>{busy === "RESET" ? t("working") : t("reset")}</button>
-        </div>
-      </section>
-
       {error ? <div role="alert" className="rounded-xl border border-red-800 bg-red-950/70 p-4 text-sm text-red-200"><strong className="mr-2">{t("errors.title")}</strong>{error}</div> : null}
 
-      <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        <Metric label={t("metrics.status")} value={state.production.shootDayStatus} />
-        <Metric label={t("metrics.scenes")} value={state.production.sceneCount} />
-        <Metric label={t("metrics.shots")} value={state.production.shotCount} />
-        <Metric label={t("metrics.completedShots")} value={state.production.completedShotCount} />
-        <Metric label={t("metrics.actors")} value={state.production.actorCount} />
-        <Metric label={t("metrics.session")} value={state.sessionStatus} />
-      </section>
+      {resolvedIntent ? (
+        <div className="flex justify-end">
+          <button className="rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-2 text-sm font-medium text-neutral-200 hover:border-neutral-500 disabled:opacity-50" onClick={() => void run({ operation: "RESET" })} disabled={busy !== null}>{busy === "RESET" ? t("working") : t("reset")}</button>
+        </div>
+      ) : null}
 
       {isCoverageTask ? (
         <section className="grid gap-4 lg:grid-cols-[1.5fr_1fr]" data-testid="active-coverage-workflow">
           <div className="rounded-2xl border border-amber-800/80 bg-gradient-to-br from-amber-950/45 via-neutral-950 to-neutral-950 p-5 sm:p-6">
-            <div className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-400">{copy.currentTask} · COVERAGE_AGENT</div>
+            <div className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-400">{copy.currentTask}</div>
             <h2 className="mt-2 text-2xl font-semibold text-white">{copy.coverageTitle}: {state.coverage.fact?.sceneId || "SC_05"}</h2>
             <p className="mt-2 text-sm text-neutral-300">{state.coverage.fact && state.coverage.fact.missingShotIds.length === 0 ? copy.coverageComplete : copy.coverageIncomplete}</p>
             {state.coverage.fact ? (
@@ -258,11 +263,17 @@ export function DashboardClient({
         <>
           <section className="grid gap-4 lg:grid-cols-[1.5fr_1fr]" data-testid="active-schedule-workflow">
             <div className="rounded-2xl border border-blue-800/80 bg-gradient-to-br from-blue-950/45 via-neutral-950 to-neutral-950 p-5 sm:p-6">
-              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-400">{copy.currentTask} · SCHEDULE_AGENT</div>
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-400">{copy.currentTask}</div>
               <h2 className="mt-2 text-2xl font-semibold text-white">{copy.scheduleTitle}</h2>
               {latestFact ? <div className="mt-4 rounded-xl border border-emerald-900 bg-emerald-950/30 p-4"><ClassificationBadge value="FACT" /><div className="mt-2 text-xs uppercase tracking-[0.14em] text-emerald-500">{copy.scheduleFact}</div><p className="mt-1 text-sm text-emerald-100">{t("actorDelay.fact", { actor: String(latestFact.payload.actorName || latestFact.payload.actorId), minutes: Number(latestFact.payload.delayMinutes || 0) })}</p></div> : null}
               <p className="mt-4 text-sm leading-6 text-neutral-300">{proposal?.why || copy.scheduleReady}</p>
-              <p className="mt-3 text-sm leading-6 text-amber-200">{copy.scheduleWaiting}</p>
+              <p className="mt-3 text-sm leading-6 text-amber-200">
+                {proposal?.status === "APPROVED"
+                  ? copy.scheduleApproved
+                  : proposal?.status === "REJECTED"
+                    ? copy.scheduleRejected
+                    : copy.scheduleWaiting}
+              </p>
             </div>
             {runtimePanel}
           </section>
@@ -291,12 +302,37 @@ export function DashboardClient({
             <h2 className="mt-2 text-xl font-semibold text-white">{t("schedule.title")}</h2>
             <p className="mt-1 text-sm text-neutral-500">{t("schedule.description")}</p>
             <div className={`mt-5 grid gap-4 ${after ? "lg:grid-cols-2" : "grid-cols-1"}`}>
-              <ScheduleColumn title={after ? t("schedule.before") : t("schedule.current")} entries={before} />
-              {after ? <ScheduleColumn title={t("schedule.after")} entries={after} /> : null}
+              <ScheduleColumn title={after ? (proposal?.status === "PENDING" ? copy.currentOrder : t("schedule.before")) : t("schedule.current")} entries={before} />
+              {after ? <ScheduleColumn title={proposal?.status === "PENDING" ? copy.proposedOrder : copy.appliedOrder} entries={after} /> : null}
             </div>
           </section>
         </>
       ) : null}
+
+      <section className="overflow-hidden rounded-2xl border border-blue-900/70 bg-gradient-to-br from-blue-950 via-neutral-950 to-neutral-950 p-5 sm:p-8" data-testid="production-context">
+        <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
+          <div>
+            <div className="mb-3 inline-flex rounded-full border border-blue-800 bg-blue-950 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-blue-300">{t("cloudDemo")}</div>
+            <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-5xl">StudioGrid AI</h1>
+            <p className="mt-2 text-base text-blue-200 sm:text-lg">{t("subtitle")}</p>
+            <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+              <span className="text-neutral-400">{t("film")}: <strong className="text-white">{state.production.title}</strong></span>
+              <span className="text-neutral-400">{t("shootDay")}: <strong className="font-mono text-white">{state.production.shootDayId}</strong></span>
+              <span className="rounded-full bg-emerald-950 px-3 py-1 text-xs font-semibold text-emerald-300">{state.production.status}</span>
+            </div>
+          </div>
+          {!resolvedIntent ? <button className="rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-2 text-sm font-medium text-neutral-200 hover:border-neutral-500 disabled:opacity-50" onClick={() => void run({ operation: "RESET" })} disabled={busy !== null}>{busy === "RESET" ? t("working") : t("reset")}</button> : null}
+        </div>
+      </section>
+
+      <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <Metric label={t("metrics.status")} value={state.production.shootDayStatus} />
+        <Metric label={t("metrics.scenes")} value={state.production.sceneCount} />
+        <Metric label={t("metrics.shots")} value={state.production.shotCount} />
+        <Metric label={t("metrics.completedShots")} value={state.production.completedShotCount} />
+        <Metric label={t("metrics.actors")} value={state.production.actorCount} />
+        <Metric label={t("metrics.session")} value={state.sessionStatus} />
+      </section>
 
       {!resolvedIntent ? (
         <>
@@ -316,7 +352,7 @@ export function DashboardClient({
       ) : null}
 
       {resolvedIntent ? (
-        <details className="rounded-2xl border border-neutral-800 bg-neutral-950/50 p-5">
+        <details className="rounded-2xl border border-neutral-800 bg-neutral-950/50 p-5" data-testid="other-demo-scenarios">
           <summary className="cursor-pointer text-sm font-semibold text-neutral-400">{copy.otherScenarios}</summary>
           <p className="mt-2 text-xs leading-5 text-neutral-600">{copy.otherScenariosHint}</p>
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
@@ -333,22 +369,33 @@ export function DashboardClient({
         </div>
       </section>
 
-      <details className="rounded-2xl border border-neutral-800 bg-neutral-900/80 p-5 sm:p-6">
-        <summary className="cursor-pointer list-none text-sm font-semibold text-blue-300">{t("evidence.title")}</summary>
+      <details className="rounded-2xl border border-neutral-800 bg-neutral-900/80 p-5 sm:p-6" data-testid="technical-details">
+        <summary className="cursor-pointer list-none text-sm font-semibold text-blue-300">{copy.technicalDetails}</summary>
         <p className="mt-2 text-xs leading-5 text-neutral-500">{t("evidence.description")}</p>
-        {state.technicalEvidence ? <dl className="mt-5 grid gap-3 text-xs sm:grid-cols-2 lg:grid-cols-3">
-          {[
-            [t("evidence.provider"), state.technicalEvidence.provider],
-            [t("evidence.agent"), state.technicalEvidence.agentName],
-            [t("evidence.model"), state.technicalEvidence.modelName || "—"],
-            [t("evidence.execution"), state.technicalEvidence.executionId],
-            [t("evidence.session"), state.technicalEvidence.sessionId],
-            [t("evidence.correlation"), state.technicalEvidence.correlationId],
-            [t("evidence.duration"), `${state.technicalEvidence.durationMs ?? "—"} ms`],
-            [t("evidence.tools"), state.technicalEvidence.toolNames.join(", ")],
-            [t("evidence.references"), state.technicalEvidence.evidenceReferences.join(", ")],
-          ].map(([label, value]) => <div key={label} className="min-w-0 rounded-lg border border-neutral-800 bg-neutral-950 p-3"><dt className="text-neutral-500">{label}</dt><dd className="mt-1 break-all font-mono text-neutral-200">{value}</dd></div>)}
-          <div className="rounded-lg border border-neutral-800 bg-neutral-950 p-3 sm:col-span-2 lg:col-span-3"><dt className="text-neutral-500">{t("evidence.rationale")}</dt><dd className="mt-1 text-neutral-200">{state.technicalEvidence.shortRationale}</dd></div>
+        {commandRouting || state.technicalEvidence ? <dl className="mt-5 grid gap-3 text-xs sm:grid-cols-2 lg:grid-cols-3">
+          {commandRouting ? <>
+            {[
+              [copy.routingProvider, commandRouting.provider],
+              [copy.routingTarget, commandRouting.target],
+              [copy.routingIntent, commandRouting.intent],
+              [copy.routingModel, commandRouting.modelName],
+            ].map(([label, value]) => <div key={label} className="min-w-0 rounded-lg border border-neutral-800 bg-neutral-950 p-3"><dt className="text-neutral-500">{label}</dt><dd className="mt-1 break-all font-mono text-neutral-200">{value}</dd></div>)}
+            <div className="rounded-lg border border-neutral-800 bg-neutral-950 p-3 sm:col-span-2"><dt className="text-neutral-500">{copy.routingSummary}</dt><dd className="mt-1 text-neutral-200">{commandRouting.summary}</dd></div>
+          </> : null}
+          {state.technicalEvidence ? <>
+            {[
+              [t("evidence.provider"), state.technicalEvidence.provider],
+              [t("evidence.agent"), state.technicalEvidence.agentName],
+              [t("evidence.model"), state.technicalEvidence.modelName || "—"],
+              [t("evidence.execution"), state.technicalEvidence.executionId],
+              [t("evidence.session"), state.technicalEvidence.sessionId],
+              [t("evidence.correlation"), state.technicalEvidence.correlationId],
+              [t("evidence.duration"), `${state.technicalEvidence.durationMs ?? "—"} ms`],
+              [t("evidence.tools"), state.technicalEvidence.toolNames.join(", ")],
+              [t("evidence.references"), state.technicalEvidence.evidenceReferences.join(", ")],
+            ].map(([label, value]) => <div key={label} className="min-w-0 rounded-lg border border-neutral-800 bg-neutral-950 p-3"><dt className="text-neutral-500">{label}</dt><dd className="mt-1 break-all font-mono text-neutral-200">{value}</dd></div>)}
+            <div className="rounded-lg border border-neutral-800 bg-neutral-950 p-3 sm:col-span-2 lg:col-span-3"><dt className="text-neutral-500">{t("evidence.rationale")}</dt><dd className="mt-1 text-neutral-200">{state.technicalEvidence.shortRationale}</dd></div>
+          </> : null}
         </dl> : <div className="mt-4 text-sm text-neutral-500">{t("evidence.empty")}</div>}
       </details>
     </div>

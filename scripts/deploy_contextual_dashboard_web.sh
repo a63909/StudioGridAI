@@ -30,6 +30,10 @@ BEFORE_SERVICE_ACCOUNT="$(gcloud run services describe "${WEB_SERVICE}" \
   --project="${PROJECT}" \
   --region="${REGION}" \
   --format='value(spec.template.spec.serviceAccountName)')"
+BEFORE_INGRESS="$(gcloud run services describe "${WEB_SERVICE}" \
+  --project="${PROJECT}" \
+  --region="${REGION}" \
+  --format="value(metadata.annotations.'run.googleapis.com/ingress')")"
 gcloud run services describe "${WEB_SERVICE}" \
   --project="${PROJECT}" \
   --region="${REGION}" \
@@ -109,6 +113,10 @@ AFTER_SERVICE_ACCOUNT="$(gcloud run services describe "${WEB_SERVICE}" \
   --project="${PROJECT}" \
   --region="${REGION}" \
   --format='value(spec.template.spec.serviceAccountName)')"
+AFTER_INGRESS="$(gcloud run services describe "${WEB_SERVICE}" \
+  --project="${PROJECT}" \
+  --region="${REGION}" \
+  --format="value(metadata.annotations.'run.googleapis.com/ingress')")"
 gcloud run services describe "${WEB_SERVICE}" \
   --project="${PROJECT}" \
   --region="${REGION}" \
@@ -122,6 +130,10 @@ gcloud run services get-iam-policy "${WEB_SERVICE}" \
 
 if [[ "${BEFORE_SERVICE_ACCOUNT}" != "${AFTER_SERVICE_ACCOUNT}" ]]; then
   echo "BLOCKER: web runtime service account changed" >&2
+  exit 1
+fi
+if [[ "${BEFORE_INGRESS}" != "${AFTER_INGRESS}" ]]; then
+  echo "BLOCKER: web ingress changed" >&2
   exit 1
 fi
 if ! cmp -s "${TEMP_DIR}/before-env.json" "${TEMP_DIR}/after-env.json"; then

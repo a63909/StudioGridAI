@@ -3,7 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useLocale } from "next-intl";
 
-import type { CommandRouting, DemoState } from "@/lib/demo/types";
+import type { DemoState } from "@/lib/demo/types";
 
 const COPY = {
   en: {
@@ -17,20 +17,6 @@ const COPY = {
     coverage: "Coverage · end-to-end",
     schedule: "Schedule · approval boundary",
     error: "Production Command failed safely.",
-    coverageDone: "Coverage check complete",
-    coverageComplete: "All required shots are complete.",
-    coverageIncomplete: "Required coverage is incomplete.",
-    completed: "Completed",
-    missing: "Missing required shots",
-    alert: "Coverage alert",
-    scheduleDone: "Schedule plan prepared",
-    scheduleFallback: "The Schedule Agent completed the replanning workflow.",
-    expectedBenefit: "Expected benefit",
-    affectedScenes: "Affected scenes",
-    approvalRequired: "The schedule has not been changed. A human production manager must approve this consequential mutation.",
-    technical: "Technical execution details",
-    routed: "Gemini routed to",
-    model: "Command model",
   },
   ru: {
     eyebrow: "Команда производству",
@@ -43,20 +29,6 @@ const COPY = {
     coverage: "Покрытие · от начала до конца",
     schedule: "Расписание · с границей одобрения",
     error: "Команда производству безопасно завершилась ошибкой.",
-    coverageDone: "Проверка покрытия завершена",
-    coverageComplete: "Все обязательные кадры сняты.",
-    coverageIncomplete: "Обязательное покрытие неполное.",
-    completed: "Снято",
-    missing: "Не хватает обязательных кадров",
-    alert: "Предупреждение покрытия",
-    scheduleDone: "План расписания подготовлен",
-    scheduleFallback: "Агент расписания завершил перепланирование.",
-    expectedBenefit: "Ожидаемая выгода",
-    affectedScenes: "Затронутые сцены",
-    approvalRequired: "Расписание пока не изменено. Для фактического изменения требуется подтверждение руководителя производства.",
-    technical: "Технические детали выполнения",
-    routed: "Gemini направил в",
-    model: "Модель команды",
   },
 } as const;
 
@@ -80,8 +52,6 @@ export function ProductionCommandCard({
   const copy = COPY[locale];
   const examples = EXAMPLES[locale];
   const [command, setCommand] = useState<string>(examples.coverage);
-  const [routing, setRouting] = useState<CommandRouting | null>(null);
-  const [result, setResult] = useState<DemoState | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -92,8 +62,6 @@ export function ProductionCommandCard({
 
     setBusy(true);
     setError(null);
-    setRouting(null);
-    setResult(null);
     try {
       const response = await fetch("/api/demo", {
         method: "POST",
@@ -102,8 +70,6 @@ export function ProductionCommandCard({
       });
       const payload = (await response.json()) as DemoState & { error?: { message?: string } };
       if (!response.ok) throw new Error(payload.error?.message || copy.error);
-      setRouting(payload.commandRouting || null);
-      setResult(payload);
       onState?.(payload);
     } catch (submissionError) {
       setError(submissionError instanceof Error ? submissionError.message : copy.error);
@@ -111,10 +77,6 @@ export function ProductionCommandCard({
       setBusy(false);
     }
   };
-
-  const coverageFact = result?.coverage.fact || null;
-  const coverageAlert = result?.coverage.alert || null;
-  const proposal = result?.proposal || null;
 
   return (
     <section className="mx-auto mt-6 max-w-screen-xl px-4">
@@ -144,72 +106,6 @@ export function ProductionCommandCard({
 
         <p className="mt-3 text-xs leading-5 text-neutral-500">{copy.supported}</p>
         {error ? <div role="alert" className="mt-4 rounded-lg border border-red-800 bg-red-950/60 p-3 text-sm text-red-200">{error}</div> : null}
-
-        {routing && result ? (
-          <div className="mt-5 rounded-xl border border-cyan-800/70 bg-neutral-950/70 p-4 sm:p-5" data-testid="production-command-result">
-            {routing.intent === "CHECK_COVERAGE" ? (
-              <>
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <div className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-400">{copy.coverageDone}</div>
-                    <h3 className="mt-2 text-lg font-semibold text-white">
-                      {coverageFact?.sceneId || "SC_05"}: {coverageFact && coverageFact.missingShotIds.length === 0 ? copy.coverageComplete : copy.coverageIncomplete}
-                    </h3>
-                  </div>
-                  {coverageAlert ? <span className="rounded-full border border-amber-800 bg-amber-950 px-3 py-1 font-mono text-xs font-semibold text-amber-200">{coverageAlert.status}</span> : null}
-                </div>
-                {coverageFact ? (
-                  <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                    <div className="rounded-lg border border-neutral-800 bg-neutral-900/80 p-3">
-                      <div className="text-xs text-neutral-500">{copy.completed}</div>
-                      <div className="mt-1 font-mono text-lg font-semibold text-white">{coverageFact.completedShotCount}/{coverageFact.plannedShotCount}</div>
-                    </div>
-                    <div className="rounded-lg border border-neutral-800 bg-neutral-900/80 p-3 sm:col-span-2">
-                      <div className="text-xs text-neutral-500">{copy.missing}</div>
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {coverageFact.missingShotIds.length > 0 ? coverageFact.missingShotIds.map((shotId) => <span key={shotId} className="rounded-md border border-amber-800 bg-amber-950/60 px-2.5 py-1 font-mono text-sm font-semibold text-amber-200">{shotId}</span>) : <span className="text-sm text-emerald-300">—</span>}
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
-                {coverageAlert?.description ? <p className="mt-4 text-sm leading-6 text-neutral-300"><strong className="text-amber-300">{copy.alert}:</strong> {coverageAlert.description}</p> : null}
-              </>
-            ) : (
-              <>
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <div className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-400">{copy.scheduleDone}</div>
-                    <h3 className="mt-2 text-lg font-semibold text-white">{proposal?.why || copy.scheduleFallback}</h3>
-                  </div>
-                  {proposal ? <span className="rounded-full border border-amber-800 bg-amber-950 px-3 py-1 font-mono text-xs font-semibold text-amber-200">{proposal.status}</span> : null}
-                </div>
-                {proposal ? (
-                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-lg border border-neutral-800 bg-neutral-900/80 p-3">
-                      <div className="text-xs text-neutral-500">{copy.expectedBenefit}</div>
-                      <div className="mt-1 font-mono text-lg font-semibold text-emerald-300">+{proposal.expectedBenefitMinutes}m</div>
-                    </div>
-                    <div className="rounded-lg border border-neutral-800 bg-neutral-900/80 p-3">
-                      <div className="text-xs text-neutral-500">{copy.affectedScenes}</div>
-                      <div className="mt-1 font-mono text-sm text-neutral-200">{proposal.affectedScenes.join(", ")}</div>
-                    </div>
-                  </div>
-                ) : null}
-                <p className="mt-4 text-sm leading-6 text-neutral-300">{copy.approvalRequired}</p>
-              </>
-            )}
-
-            <details className="mt-4 border-t border-neutral-800 pt-3">
-              <summary className="cursor-pointer text-xs font-semibold text-neutral-500 hover:text-neutral-300">{copy.technical}</summary>
-              <div className="mt-3 grid gap-3 text-xs sm:grid-cols-3">
-                <div><div className="text-neutral-600">{copy.routed}</div><div className="mt-1 font-mono text-cyan-200">{routing.target}</div></div>
-                <div><div className="text-neutral-600">{copy.model}</div><div className="mt-1 font-mono text-neutral-300">{routing.modelName}</div></div>
-                <div><div className="text-neutral-600">Intent</div><div className="mt-1 font-mono text-neutral-300">{routing.intent}</div></div>
-                <p className="text-neutral-500 sm:col-span-3">{routing.summary}</p>
-              </div>
-            </details>
-          </div>
-        ) : null}
       </div>
     </section>
   );
