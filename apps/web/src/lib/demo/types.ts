@@ -46,6 +46,14 @@ export interface TechnicalEvidence {
   shortRationale: string;
 }
 
+export interface CommandRouting {
+  provider: "Google Vertex AI";
+  modelName: string;
+  intent: "ACTOR_DELAY" | "CHECK_COVERAGE";
+  target: "SCHEDULE_AGENT" | "COVERAGE_AGENT";
+  summary: string;
+}
+
 export interface DemoCoverage {
   fact: null | {
     sceneId: string;
@@ -94,6 +102,7 @@ export interface DemoState {
     firestore: RuntimeConnection;
   };
   technicalEvidence: TechnicalEvidence | null;
+  commandRouting?: CommandRouting | null;
   lastErrorCode: string | null;
   humanDecision: null | {
     classification: "HUMAN_DECISION";
@@ -108,6 +117,7 @@ export interface DemoState {
 
 export type DemoAction =
   | { operation: "RESET" }
+  | { operation: "COMMAND"; command: string }
   | { operation: "ACTOR_DELAY"; actorId: "ACT_02"; delayMinutes: 45 }
   | { operation: "ACTOR_DELAY"; actorId: "ACT_03"; delayMinutes: 30 }
   | { operation: "APPROVE"; proposalId: string }
