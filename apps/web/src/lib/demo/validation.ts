@@ -15,6 +15,19 @@ export function parseDemoAction(value: unknown): DemoAction {
   if (!isRecord(value) || typeof value.operation !== "string") {
     throw new Error("INVALID_OPERATION");
   }
+  if (value.operation === "COMMAND") {
+    if (!hasExactKeys(value, ["operation", "command"])) {
+      throw new Error("INVALID_OPERATION_FIELDS");
+    }
+    if (typeof value.command !== "string") {
+      throw new Error("INVALID_COMMAND");
+    }
+    const command = value.command.trim();
+    if (command.length < 4 || command.length > 500 || command.includes("\0")) {
+      throw new Error("INVALID_COMMAND");
+    }
+    return { operation: "COMMAND", command };
+  }
   if (value.operation === "RESET" || value.operation === "CHECK_COVERAGE") {
     if (!hasExactKeys(value, ["operation"])) throw new Error("INVALID_OPERATION_FIELDS");
     return { operation: value.operation };

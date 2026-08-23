@@ -100,6 +100,7 @@ export async function POST(request: NextRequest) {
     const body = { ...action, demoSessionId: demo.id };
     const route = {
       RESET: "/control/reset",
+      COMMAND: "/control/command",
       ACTOR_DELAY: "/control/actor-delay",
       APPROVE: "/control/proposal/approve",
       REJECT: "/control/proposal/reject",
