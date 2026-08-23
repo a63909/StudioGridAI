@@ -51,7 +51,7 @@ export function ProductionCommandCard() {
   const locale = useLocale() === "ru" ? "ru" : "en";
   const copy = COPY[locale];
   const examples = EXAMPLES[locale];
-  const [command, setCommand] = useState(examples.coverage);
+  const [command, setCommand] = useState<string>(examples.coverage);
   const [routing, setRouting] = useState<CommandRouting | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
