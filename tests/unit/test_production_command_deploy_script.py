@@ -32,6 +32,16 @@ def test_deploy_updates_only_existing_control_and_web_images():
         assert value not in SCRIPT
 
 
+def test_deploy_promotes_only_ready_control_and_web_revisions():
+    assert SCRIPT.count("gcloud run services update-traffic") == 1
+    assert 'promote_deployed_revision "${CONTROL_SERVICE}"' in SCRIPT
+    assert 'promote_deployed_revision "${WEB_SERVICE}"' in SCRIPT
+    assert 'promote_deployed_revision "${TOOL_SERVICE}"' not in SCRIPT
+    assert "status.latestCreatedRevisionName" in SCRIPT
+    assert "status.conditions[0].status" in SCRIPT
+    assert '--to-revisions="${revision}=100"' in SCRIPT
+
+
 def test_artifact_repository_is_created_only_after_absence_check():
     absence_check = 'if [[ -z "${ARTIFACT_REPOSITORY}" ]]; then'
     create = 'gcloud artifacts repositories create "${ARTIFACT_REPOSITORY}"'

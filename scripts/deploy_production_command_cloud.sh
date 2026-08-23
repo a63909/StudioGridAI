@@ -123,6 +123,45 @@ gcloud run deploy "${WEB_SERVICE}" \
   --image="${WEB_IMAGE}" \
   --quiet
 
+# A service can have traffic pinned to a named/tagged older revision. In that
+# state the deploy command creates a healthy revision but does not necessarily
+# make it serve requests. Promote only the just-created, Ready revision of each
+# allowed service; no IAM, identity, ingress, env, or other service setting is
+# changed here.
+promote_deployed_revision() {
+  local service="$1"
+  local revision
+  local ready_status
+
+  revision="$(gcloud run services describe "${service}" \
+    --project="${PROJECT}" \
+    --region="${REGION}" \
+    --format='value(status.latestCreatedRevisionName)')"
+  if [[ -z "${revision}" ]]; then
+    echo "BLOCKER: ${service} has no latest created revision" >&2
+    exit 1
+  fi
+
+  ready_status="$(gcloud run revisions describe "${revision}" \
+    --project="${PROJECT}" \
+    --region="${REGION}" \
+    --format='value(status.conditions[0].status)')"
+  if [[ "${ready_status}" != "True" ]]; then
+    echo "BLOCKER: ${service} revision ${revision} is not Ready (${ready_status:-UNKNOWN})" >&2
+    exit 1
+  fi
+
+  gcloud run services update-traffic "${service}" \
+    --project="${PROJECT}" \
+    --region="${REGION}" \
+    --to-revisions="${revision}=100" \
+    --quiet
+  echo "Serving revision: ${service} -> ${revision} (100%)"
+}
+
+promote_deployed_revision "${CONTROL_SERVICE}"
+promote_deployed_revision "${WEB_SERVICE}"
+
 snapshot_runtime after
 
 # A deploy is allowed to create revisions and change only the two container
