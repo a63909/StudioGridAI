@@ -1,11 +1,9 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useState } from "react";
 import { useLocale } from "next-intl";
 
 import type { CommandRouting, DemoState } from "@/lib/demo/types";
-
-const STORAGE_KEY = "studiogrid_last_command_routing";
 
 const COPY = {
   en: {
@@ -15,10 +13,10 @@ const COPY = {
     placeholder: "Check SC_05 and make sure all required coverage is complete.",
     button: "Run production command",
     running: "Gemini is routing and the agent workflow is running...",
-    supported: "Public build: exact actor-delay replanning and shot-coverage checks. Unsupported commands fail closed.",
+    supported: "Public build: exact actor-delay replanning and shot-coverage checks. Unsupported commands fail closed. The durable dashboard below refreshes automatically.",
     coverage: "Coverage · end-to-end",
     schedule: "Schedule · approval boundary",
-    routed: "Last routed command",
+    routed: "Gemini routed to",
     model: "Command model",
     error: "Production Command failed safely.",
   },
@@ -29,10 +27,10 @@ const COPY = {
     placeholder: "Проверь SC_05 и убедись, что все обязательные кадры сняты.",
     button: "Выполнить производственную команду",
     running: "Gemini маршрутизирует команду, агентный сценарий выполняется...",
-    supported: "Публичная версия: точные сценарии задержки актёров и проверка покрытия кадрами. Остальные команды безопасно отклоняются.",
+    supported: "Публичная версия: точные сценарии задержки актёров и проверка покрытия кадрами. Остальные команды безопасно отклоняются. Сохранённое состояние ниже обновляется автоматически.",
     coverage: "Покрытие · от начала до конца",
     schedule: "Расписание · с границей одобрения",
-    routed: "Последняя маршрутизация",
+    routed: "Gemini направил в",
     model: "Модель команды",
     error: "Команда производству безопасно завершилась ошибкой.",
   },
@@ -49,20 +47,6 @@ const EXAMPLES = {
   },
 } as const;
 
-function readStoredRouting(): CommandRouting | null {
-  try {
-    const raw = window.sessionStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as CommandRouting;
-    if (parsed && typeof parsed.summary === "string" && typeof parsed.modelName === "string" && (parsed.target === "SCHEDULE_AGENT" || parsed.target === "COVERAGE_AGENT")) {
-      return parsed;
-    }
-  } catch {
-    // Stale browser state is non-authoritative and can be ignored.
-  }
-  return null;
-}
-
 export function ProductionCommandCard() {
   const locale = useLocale() === "ru" ? "ru" : "en";
   const copy = COPY[locale];
@@ -72,10 +56,6 @@ export function ProductionCommandCard() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    setRouting(readStoredRouting());
-  }, []);
-
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const normalized = command.trim();
@@ -83,6 +63,7 @@ export function ProductionCommandCard() {
 
     setBusy(true);
     setError(null);
+    setRouting(null);
     try {
       const response = await fetch("/api/demo", {
         method: "POST",
@@ -91,13 +72,10 @@ export function ProductionCommandCard() {
       });
       const payload = (await response.json()) as DemoState & { error?: { message?: string } };
       if (!response.ok) throw new Error(payload.error?.message || copy.error);
-      if (payload.commandRouting) {
-        window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(payload.commandRouting));
-        setRouting(payload.commandRouting);
-      }
-      window.location.reload();
+      setRouting(payload.commandRouting || null);
     } catch (submissionError) {
       setError(submissionError instanceof Error ? submissionError.message : copy.error);
+    } finally {
       setBusy(false);
     }
   };
