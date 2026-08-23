@@ -1,8 +1,43 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
-import type { DemoAction, DemoScheduleEntry, DemoState, DemoTimelineEntry, RuntimeConnection } from "@/lib/demo/types";
+import { useLocale, useTranslations } from "next-intl";
+import type { CommandRouting, DemoAction, DemoScheduleEntry, DemoState, DemoTimelineEntry, RuntimeConnection } from "@/lib/demo/types";
+
+type ActiveIntent = CommandRouting["intent"];
+
+const CONTEXT_COPY = {
+  en: {
+    currentTask: "Current agent task",
+    coverageTitle: "Coverage result",
+    coverageComplete: "All required shots are complete.",
+    coverageIncomplete: "Required coverage is incomplete.",
+    completed: "Completed shots",
+    missing: "Missing required shots",
+    alert: "Coverage alert",
+    scheduleTitle: "Schedule result",
+    scheduleFact: "Reported production disruption",
+    scheduleReady: "The Schedule Agent prepared a production recommendation.",
+    scheduleWaiting: "The recommendation is ready. The actual schedule remains unchanged until a human production manager approves it.",
+    otherScenarios: "Other demo scenarios",
+    otherScenariosHint: "These controls are secondary test shortcuts and are not part of the active command result.",
+  },
+  ru: {
+    currentTask: "Текущая задача агента",
+    coverageTitle: "Результат проверки покрытия",
+    coverageComplete: "Все обязательные кадры сняты.",
+    coverageIncomplete: "Обязательное покрытие неполное.",
+    completed: "Снято кадров",
+    missing: "Не хватает обязательных кадров",
+    alert: "Предупреждение покрытия",
+    scheduleTitle: "Результат по расписанию",
+    scheduleFact: "Зафиксированное изменение производства",
+    scheduleReady: "Агент расписания подготовил производственную рекомендацию.",
+    scheduleWaiting: "Рекомендация готова. Фактическое расписание не изменится, пока руководитель производства не подтвердит её.",
+    otherScenarios: "Другие демонстрационные сценарии",
+    otherScenariosHint: "Эти кнопки — вторичные тестовые ярлыки и не относятся к результату текущей команды.",
+  },
+} as const;
 
 function StatusDot({ label, value }: { label: string; value: RuntimeConnection }) {
   const color = value === "CONNECTED" ? "bg-emerald-400" : value === "ERROR" ? "bg-red-400" : "bg-neutral-500";
@@ -48,11 +83,17 @@ function ClassificationBadge({ value }: { value: DemoTimelineEntry["classificati
 export function DashboardClient({
   state,
   onState,
+  activeIntent,
+  onActiveIntentChange,
 }: {
   state: DemoState | null;
   onState: (state: DemoState) => void;
+  activeIntent: ActiveIntent | null;
+  onActiveIntentChange: (intent: ActiveIntent | null) => void;
 }) {
   const t = useTranslations("cloudDemo");
+  const locale = useLocale() === "ru" ? "ru" : "en";
+  const copy = CONTEXT_COPY[locale];
   const [selectedActor, setSelectedActor] = useState<"ACT_02" | "ACT_03">("ACT_02");
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -86,6 +127,9 @@ export function DashboardClient({
       const payload = await response.json();
       if (!response.ok) throw new Error(payload?.error?.message || t("errors.action"));
       onState(payload);
+      if (action.operation === "RESET") onActiveIntentChange(null);
+      if (action.operation === "ACTOR_DELAY") onActiveIntentChange("ACTOR_DELAY");
+      if (action.operation === "CHECK_COVERAGE") onActiveIntentChange("CHECK_COVERAGE");
     } catch (actionError) {
       setError(actionError instanceof Error ? actionError.message : t("errors.action"));
       await load();
@@ -101,6 +145,53 @@ export function DashboardClient({
   const after = state.schedule.after;
   const actorDelay = selectedActor === "ACT_02" ? 45 : 30;
   const latestFact = [...state.timeline].reverse().find((item) => item.type === "ACTOR_DELAYED");
+  const durableIntent: ActiveIntent | null = state.technicalEvidence?.agentName === "COVERAGE_AGENT"
+    ? "CHECK_COVERAGE"
+    : state.technicalEvidence?.agentName === "SCHEDULE_AGENT"
+      ? "ACTOR_DELAY"
+      : null;
+  const resolvedIntent = activeIntent || state.commandRouting?.intent || durableIntent;
+  const isCoverageTask = resolvedIntent === "CHECK_COVERAGE";
+  const isScheduleTask = resolvedIntent === "ACTOR_DELAY";
+
+  const runtimePanel = (
+    <div className="rounded-2xl border border-neutral-800 bg-neutral-900/80 p-5 sm:p-6">
+      <div className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">{t("runtime.title")}</div>
+      <div className="mt-4 grid gap-2">
+        <StatusDot label={t("runtime.agentEngine")} value={state.runtime.agentEngine} />
+        <StatusDot label={t("runtime.gemini")} value={state.runtime.gemini} />
+        <StatusDot label={t("runtime.toolServer")} value={state.runtime.privateToolServer} />
+        <StatusDot label={t("runtime.firestore")} value={state.runtime.firestore} />
+      </div>
+      <p className="mt-4 text-xs leading-5 text-neutral-500">{t("runtime.truth")}</p>
+    </div>
+  );
+
+  const actorDelayControls = (
+    <div className="rounded-2xl border border-neutral-800 bg-neutral-900/80 p-5 sm:p-6">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+        <div>
+          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-400">{t("actorDelay.eyebrow")}</div>
+          <h2 className="mt-2 text-xl font-semibold text-white">{t("actorDelay.title")}</h2>
+          <p className="mt-1 max-w-xl text-sm leading-6 text-neutral-400">{t("actorDelay.description")}</p>
+        </div>
+        <div className="flex rounded-lg border border-neutral-700 bg-neutral-950 p-1">
+          <button className={`rounded-md px-3 py-2 text-xs ${selectedActor === "ACT_02" ? "bg-blue-600 text-white" : "text-neutral-400"}`} onClick={() => setSelectedActor("ACT_02")} disabled={busy !== null}>{t("actorDelay.maya")}</button>
+          <button className={`rounded-md px-3 py-2 text-xs ${selectedActor === "ACT_03" ? "bg-blue-600 text-white" : "text-neutral-400"}`} onClick={() => setSelectedActor("ACT_03")} disabled={busy !== null}>{t("actorDelay.daniel")}</button>
+        </div>
+      </div>
+      <button className="mt-5 w-full rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-500 disabled:opacity-50 sm:w-auto" onClick={() => void run(selectedActor === "ACT_02" ? { operation: "ACTOR_DELAY", actorId: "ACT_02", delayMinutes: 45 } : { operation: "ACTOR_DELAY", actorId: "ACT_03", delayMinutes: 30 })} disabled={busy !== null || proposal?.status === "PENDING"}>{busy === "ACTOR_DELAY" ? t("actorDelay.running") : t("actorDelay.button", { minutes: actorDelay })}</button>
+    </div>
+  );
+
+  const coverageControls = (
+    <div className="rounded-2xl border border-neutral-800 bg-neutral-900/80 p-5 sm:p-6">
+      <div className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-400">{t("coverage.eyebrow")}</div>
+      <h2 className="mt-2 text-xl font-semibold text-white">{t("coverage.title")}</h2>
+      <p className="mt-1 text-sm leading-6 text-neutral-400">{t("coverage.description")}</p>
+      <button className="mt-5 w-full rounded-lg border border-amber-700 bg-amber-950 px-5 py-3 text-sm font-semibold text-amber-200 hover:bg-amber-900 disabled:opacity-50 sm:w-auto" onClick={() => void run({ operation: "CHECK_COVERAGE" })} disabled={busy !== null}>{busy === "CHECK_COVERAGE" ? t("coverage.running") : t("coverage.button")}</button>
+    </div>
+  );
 
   return (
     <div className="mx-auto max-w-screen-xl space-y-6 px-4 py-6 sm:py-8">
@@ -131,77 +222,117 @@ export function DashboardClient({
         <Metric label={t("metrics.session")} value={state.sessionStatus} />
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-[1.3fr_1fr]">
-        <div className="rounded-2xl border border-neutral-800 bg-neutral-900/80 p-5 sm:p-6">
-          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-400">01 · {t("actorDelay.eyebrow")}</div>
-              <h2 className="mt-2 text-xl font-semibold text-white">{t("actorDelay.title")}</h2>
-              <p className="mt-1 max-w-xl text-sm leading-6 text-neutral-400">{t("actorDelay.description")}</p>
-            </div>
-            <div className="flex rounded-lg border border-neutral-700 bg-neutral-950 p-1">
-              <button className={`rounded-md px-3 py-2 text-xs ${selectedActor === "ACT_02" ? "bg-blue-600 text-white" : "text-neutral-400"}`} onClick={() => setSelectedActor("ACT_02")} disabled={busy !== null}>{t("actorDelay.maya")}</button>
-              <button className={`rounded-md px-3 py-2 text-xs ${selectedActor === "ACT_03" ? "bg-blue-600 text-white" : "text-neutral-400"}`} onClick={() => setSelectedActor("ACT_03")} disabled={busy !== null}>{t("actorDelay.daniel")}</button>
-            </div>
+      {isCoverageTask ? (
+        <section className="grid gap-4 lg:grid-cols-[1.5fr_1fr]" data-testid="active-coverage-workflow">
+          <div className="rounded-2xl border border-amber-800/80 bg-gradient-to-br from-amber-950/45 via-neutral-950 to-neutral-950 p-5 sm:p-6">
+            <div className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-400">{copy.currentTask} · COVERAGE_AGENT</div>
+            <h2 className="mt-2 text-2xl font-semibold text-white">{copy.coverageTitle}: {state.coverage.fact?.sceneId || "SC_05"}</h2>
+            <p className="mt-2 text-sm text-neutral-300">{state.coverage.fact && state.coverage.fact.missingShotIds.length === 0 ? copy.coverageComplete : copy.coverageIncomplete}</p>
+            {state.coverage.fact ? (
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-xl border border-neutral-800 bg-neutral-950/70 p-4">
+                  <div className="text-xs text-neutral-500">{copy.completed}</div>
+                  <div className="mt-1 font-mono text-2xl font-semibold text-white">{state.coverage.fact.completedShotCount}/{state.coverage.fact.plannedShotCount}</div>
+                  <div className="mt-1 font-mono text-xs text-neutral-500">{state.coverage.fact.coveragePercent}%</div>
+                </div>
+                <div className="rounded-xl border border-amber-900 bg-amber-950/30 p-4">
+                  <div className="text-xs text-amber-400">{copy.missing}</div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {state.coverage.fact.missingShotIds.length > 0 ? state.coverage.fact.missingShotIds.map((shotId) => <span key={shotId} className="rounded-md border border-amber-800 bg-amber-950 px-3 py-1.5 font-mono text-sm font-semibold text-amber-100">{shotId}</span>) : <span className="text-sm text-emerald-300">—</span>}
+                  </div>
+                </div>
+              </div>
+            ) : <div className="mt-5 rounded-xl border border-dashed border-neutral-700 p-6 text-sm text-neutral-500">{t("coverage.description")}</div>}
+            {state.coverage.alert ? (
+              <div className="mt-4 rounded-xl border border-amber-800 bg-amber-950/25 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3"><span className="text-xs font-semibold uppercase text-amber-400">{copy.alert}</span><span className="rounded-full bg-amber-950 px-3 py-1 font-mono text-xs font-semibold text-amber-200">{state.coverage.alert.status}</span></div>
+                <p className="mt-2 text-sm leading-6 text-neutral-300">{state.coverage.alert.description}</p>
+              </div>
+            ) : null}
           </div>
-          <button className="mt-5 w-full rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-500 disabled:opacity-50 sm:w-auto" onClick={() => void run(selectedActor === "ACT_02" ? { operation: "ACTOR_DELAY", actorId: "ACT_02", delayMinutes: 45 } : { operation: "ACTOR_DELAY", actorId: "ACT_03", delayMinutes: 30 })} disabled={busy !== null || proposal?.status === "PENDING"}>{busy === "ACTOR_DELAY" ? t("actorDelay.running") : t("actorDelay.button", { minutes: actorDelay })}</button>
-          {latestFact ? <div className="mt-5 rounded-xl border border-emerald-900 bg-emerald-950/40 p-4"><ClassificationBadge value="FACT" /><p className="mt-2 text-sm text-emerald-100">{t("actorDelay.fact", { actor: String(latestFact.payload.actorName || latestFact.payload.actorId), minutes: Number(latestFact.payload.delayMinutes || 0) })}</p></div> : null}
-        </div>
+          {runtimePanel}
+        </section>
+      ) : null}
 
-        <div className="rounded-2xl border border-neutral-800 bg-neutral-900/80 p-5 sm:p-6">
-          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">{t("runtime.title")}</div>
-          <div className="mt-4 grid gap-2">
-            <StatusDot label={t("runtime.agentEngine")} value={state.runtime.agentEngine} />
-            <StatusDot label={t("runtime.gemini")} value={state.runtime.gemini} />
-            <StatusDot label={t("runtime.toolServer")} value={state.runtime.privateToolServer} />
-            <StatusDot label={t("runtime.firestore")} value={state.runtime.firestore} />
-          </div>
-          <p className="mt-4 text-xs leading-5 text-neutral-500">{t("runtime.truth")}</p>
-        </div>
-      </section>
-      <section className="rounded-2xl border border-neutral-800 bg-neutral-900/80 p-5 sm:p-6">
-        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-400">02 · {t("proposal.eyebrow")}</div>
-        <h2 className="mt-2 text-xl font-semibold text-white">{t("proposal.title")}</h2>
-        {!proposal ? <div className="mt-5 rounded-xl border border-dashed border-neutral-700 p-8 text-center text-sm text-neutral-500">{t("proposal.empty")}</div> : (
-          <div className="mt-5 rounded-xl border border-blue-800 bg-blue-950/25 p-4 sm:p-5">
-            <div className="flex flex-col justify-between gap-4 sm:flex-row">
-              <div><div className="flex flex-wrap items-center gap-2"><ClassificationBadge value="RECOMMENDATION" /><span className={`rounded px-2 py-0.5 font-mono text-xs ${proposal.status === "PENDING" ? "bg-amber-950 text-amber-300" : proposal.status === "APPROVED" ? "bg-emerald-950 text-emerald-300" : "bg-red-950 text-red-300"}`}>{proposal.status}</span></div><h3 className="mt-3 text-lg font-medium text-white">{proposal.why}</h3></div>
-              <div className="shrink-0 sm:text-right"><div className="font-mono text-2xl font-semibold text-emerald-400">+{proposal.expectedBenefitMinutes}m</div><div className="text-xs text-neutral-500">{t("proposal.expectedBenefit")}</div></div>
+      {isScheduleTask ? (
+        <>
+          <section className="grid gap-4 lg:grid-cols-[1.5fr_1fr]" data-testid="active-schedule-workflow">
+            <div className="rounded-2xl border border-blue-800/80 bg-gradient-to-br from-blue-950/45 via-neutral-950 to-neutral-950 p-5 sm:p-6">
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-400">{copy.currentTask} · SCHEDULE_AGENT</div>
+              <h2 className="mt-2 text-2xl font-semibold text-white">{copy.scheduleTitle}</h2>
+              {latestFact ? <div className="mt-4 rounded-xl border border-emerald-900 bg-emerald-950/30 p-4"><ClassificationBadge value="FACT" /><div className="mt-2 text-xs uppercase tracking-[0.14em] text-emerald-500">{copy.scheduleFact}</div><p className="mt-1 text-sm text-emerald-100">{t("actorDelay.fact", { actor: String(latestFact.payload.actorName || latestFact.payload.actorId), minutes: Number(latestFact.payload.delayMinutes || 0) })}</p></div> : null}
+              <p className="mt-4 text-sm leading-6 text-neutral-300">{proposal?.why || copy.scheduleReady}</p>
+              <p className="mt-3 text-sm leading-6 text-amber-200">{copy.scheduleWaiting}</p>
             </div>
-            <div className="mt-5 grid gap-4 lg:grid-cols-3">
-              <div><h4 className="text-xs font-semibold uppercase text-neutral-500">{t("proposal.evidence")}</h4><ul className="mt-2 space-y-2 text-sm text-neutral-300">{proposal.evidence.map((item) => <li key={item.evidenceId}>• {item.description}</li>)}</ul></div>
-              <div><h4 className="text-xs font-semibold uppercase text-neutral-500">{t("proposal.ordering")}</h4><ul className="mt-2 space-y-2 text-sm text-neutral-300">{proposal.proposedChanges.map((change) => <li key={`${change.sceneId}-${change.toPosition}`}><span className="font-mono text-blue-300">{change.sceneId}</span> · {change.fromPosition} → {change.toPosition}</li>)}</ul><p className="mt-3 text-xs text-neutral-500">{t("proposal.affected")}: {proposal.affectedScenes.join(", ")}</p></div>
-              <div><h4 className="text-xs font-semibold uppercase text-neutral-500">{t("proposal.risks")}</h4><ul className="mt-2 space-y-2 text-sm text-neutral-300">{proposal.risks.map((risk, index) => <li key={`${risk.severity}-${index}`}>• {risk.description} <span className="text-neutral-500">({risk.severity})</span></li>)}</ul><p className="mt-3 text-xs text-neutral-400">{t("proposal.confidence")}: <strong className="font-mono text-white">{Math.round(proposal.confidence * 100)}%</strong></p></div>
+            {runtimePanel}
+          </section>
+
+          <section className="rounded-2xl border border-neutral-800 bg-neutral-900/80 p-5 sm:p-6">
+            <div className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-400">{t("proposal.eyebrow")}</div>
+            <h2 className="mt-2 text-xl font-semibold text-white">{t("proposal.title")}</h2>
+            {!proposal ? <div className="mt-5 rounded-xl border border-dashed border-neutral-700 p-8 text-center text-sm text-neutral-500">{t("proposal.empty")}</div> : (
+              <div className="mt-5 rounded-xl border border-blue-800 bg-blue-950/25 p-4 sm:p-5">
+                <div className="flex flex-col justify-between gap-4 sm:flex-row">
+                  <div><div className="flex flex-wrap items-center gap-2"><ClassificationBadge value="RECOMMENDATION" /><span className={`rounded px-2 py-0.5 font-mono text-xs ${proposal.status === "PENDING" ? "bg-amber-950 text-amber-300" : proposal.status === "APPROVED" ? "bg-emerald-950 text-emerald-300" : "bg-red-950 text-red-300"}`}>{proposal.status}</span></div><h3 className="mt-3 text-lg font-medium text-white">{proposal.why}</h3></div>
+                  <div className="shrink-0 sm:text-right"><div className="font-mono text-2xl font-semibold text-emerald-400">+{proposal.expectedBenefitMinutes}m</div><div className="text-xs text-neutral-500">{t("proposal.expectedBenefit")}</div></div>
+                </div>
+                <div className="mt-5 grid gap-4 lg:grid-cols-3">
+                  <div><h4 className="text-xs font-semibold uppercase text-neutral-500">{t("proposal.evidence")}</h4><ul className="mt-2 space-y-2 text-sm text-neutral-300">{proposal.evidence.map((item) => <li key={item.evidenceId}>• {item.description}</li>)}</ul></div>
+                  <div><h4 className="text-xs font-semibold uppercase text-neutral-500">{t("proposal.ordering")}</h4><ul className="mt-2 space-y-2 text-sm text-neutral-300">{proposal.proposedChanges.map((change) => <li key={`${change.sceneId}-${change.toPosition}`}><span className="font-mono text-blue-300">{change.sceneId}</span> · {change.fromPosition} → {change.toPosition}</li>)}</ul><p className="mt-3 text-xs text-neutral-500">{t("proposal.affected")}: {proposal.affectedScenes.join(", ")}</p></div>
+                  <div><h4 className="text-xs font-semibold uppercase text-neutral-500">{t("proposal.risks")}</h4><ul className="mt-2 space-y-2 text-sm text-neutral-300">{proposal.risks.map((risk, index) => <li key={`${risk.severity}-${index}`}>• {risk.description} <span className="text-neutral-500">({risk.severity})</span></li>)}</ul><p className="mt-3 text-xs text-neutral-400">{t("proposal.confidence")}: <strong className="font-mono text-white">{Math.round(proposal.confidence * 100)}%</strong></p></div>
+                </div>
+                {proposal.status === "PENDING" ? <div className="mt-6 flex flex-col gap-3 border-t border-blue-900 pt-5 sm:flex-row"><button className="rounded-lg bg-emerald-600 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-50" onClick={() => void run({ operation: "APPROVE", proposalId: proposal.proposalId })} disabled={busy !== null}>{busy === "APPROVE" ? t("working") : t("proposal.approve")}</button><button className="rounded-lg border border-red-800 bg-red-950 px-5 py-3 text-sm font-semibold text-red-200 hover:bg-red-900 disabled:opacity-50" onClick={() => void run({ operation: "REJECT", proposalId: proposal.proposalId })} disabled={busy !== null}>{busy === "REJECT" ? t("working") : t("proposal.reject")}</button><span className="self-center text-xs text-neutral-500">{t("proposal.humanOnly")}</span></div> : <div className="mt-5 rounded-lg border border-fuchsia-900 bg-fuchsia-950/40 p-3 text-sm text-fuchsia-200"><ClassificationBadge value="HUMAN_DECISION" /> <span className="ml-2">{proposal.status === "APPROVED" ? t("proposal.approvedHuman") : t("proposal.rejectedHuman")}</span></div>}
+              </div>
+            )}
+          </section>
+
+          <section className="rounded-2xl border border-neutral-800 bg-neutral-900/80 p-5 sm:p-6">
+            <div className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-400">{t("schedule.eyebrow")}</div>
+            <h2 className="mt-2 text-xl font-semibold text-white">{t("schedule.title")}</h2>
+            <p className="mt-1 text-sm text-neutral-500">{t("schedule.description")}</p>
+            <div className={`mt-5 grid gap-4 ${after ? "lg:grid-cols-2" : "grid-cols-1"}`}>
+              <ScheduleColumn title={after ? t("schedule.before") : t("schedule.current")} entries={before} />
+              {after ? <ScheduleColumn title={t("schedule.after")} entries={after} /> : null}
             </div>
-            {proposal.status === "PENDING" ? <div className="mt-6 flex flex-col gap-3 border-t border-blue-900 pt-5 sm:flex-row"><button className="rounded-lg bg-emerald-600 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-500 disabled:opacity-50" onClick={() => void run({ operation: "APPROVE", proposalId: proposal.proposalId })} disabled={busy !== null}>{busy === "APPROVE" ? t("working") : t("proposal.approve")}</button><button className="rounded-lg border border-red-800 bg-red-950 px-5 py-3 text-sm font-semibold text-red-200 hover:bg-red-900 disabled:opacity-50" onClick={() => void run({ operation: "REJECT", proposalId: proposal.proposalId })} disabled={busy !== null}>{busy === "REJECT" ? t("working") : t("proposal.reject")}</button><span className="self-center text-xs text-neutral-500">{t("proposal.humanOnly")}</span></div> : <div className="mt-5 rounded-lg border border-fuchsia-900 bg-fuchsia-950/40 p-3 text-sm text-fuchsia-200"><ClassificationBadge value="HUMAN_DECISION" /> <span className="ml-2">{proposal.status === "APPROVED" ? t("proposal.approvedHuman") : t("proposal.rejectedHuman")}</span></div>}
+          </section>
+        </>
+      ) : null}
+
+      {!resolvedIntent ? (
+        <>
+          <section className="grid gap-4 lg:grid-cols-[1.3fr_1fr]">
+            {actorDelayControls}
+            {runtimePanel}
+          </section>
+          <section className="grid gap-4 lg:grid-cols-2">
+            {coverageControls}
+            <div className="rounded-2xl border border-neutral-800 bg-neutral-900/80 p-5 sm:p-6">
+              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-400">{t("schedule.eyebrow")}</div>
+              <h2 className="mt-2 text-xl font-semibold text-white">{t("schedule.title")}</h2>
+              <div className="mt-5"><ScheduleColumn title={t("schedule.current")} entries={before} /></div>
+            </div>
+          </section>
+        </>
+      ) : null}
+
+      {resolvedIntent ? (
+        <details className="rounded-2xl border border-neutral-800 bg-neutral-950/50 p-5">
+          <summary className="cursor-pointer text-sm font-semibold text-neutral-400">{copy.otherScenarios}</summary>
+          <p className="mt-2 text-xs leading-5 text-neutral-600">{copy.otherScenariosHint}</p>
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+            {isCoverageTask ? actorDelayControls : coverageControls}
           </div>
-        )}
-      </section>
+        </details>
+      ) : null}
+
       <section className="rounded-2xl border border-neutral-800 bg-neutral-900/80 p-5 sm:p-6">
-        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-400">03 · {t("schedule.eyebrow")}</div>
-        <h2 className="mt-2 text-xl font-semibold text-white">{t("schedule.title")}</h2>
-        <p className="mt-1 text-sm text-neutral-500">{t("schedule.description")}</p>
-        <div className={`mt-5 grid gap-4 ${after ? "lg:grid-cols-2" : "grid-cols-1"}`}>
-          <ScheduleColumn title={after ? t("schedule.before") : t("schedule.current")} entries={before} />
-          {after ? <ScheduleColumn title={t("schedule.after")} entries={after} /> : null}
+        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-fuchsia-400">{t("timeline.eyebrow")}</div>
+        <h2 className="mt-2 text-xl font-semibold text-white">{t("timeline.title")}</h2>
+        <div className="demo-scroll mt-5 max-h-[28rem] space-y-3 overflow-y-auto pr-1">
+          {state.timeline.length === 0 ? <div className="text-sm text-neutral-500">{t("timeline.empty")}</div> : state.timeline.map((event) => <div key={event.eventId} className="rounded-lg border border-neutral-800 bg-neutral-950/60 p-3"><div className="flex flex-wrap items-center justify-between gap-2"><ClassificationBadge value={event.classification} /><time className="font-mono text-[10px] text-neutral-600">{new Date(event.timestamp).toLocaleTimeString()}</time></div><div className="mt-2 font-mono text-xs text-neutral-300">{event.type}</div><div className="mt-1 truncate text-xs text-neutral-500">{Object.entries(event.payload).map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(", ") : String(value)}`).join(" · ")}</div></div>)}
         </div>
       </section>
-      <section className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-2xl border border-neutral-800 bg-neutral-900/80 p-5 sm:p-6">
-          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-400">04 · {t("coverage.eyebrow")}</div>
-          <h2 className="mt-2 text-xl font-semibold text-white">{t("coverage.title")}</h2>
-          <p className="mt-1 text-sm leading-6 text-neutral-400">{t("coverage.description")}</p>
-          <button className="mt-5 w-full rounded-lg border border-amber-700 bg-amber-950 px-5 py-3 text-sm font-semibold text-amber-200 hover:bg-amber-900 disabled:opacity-50 sm:w-auto" onClick={() => void run({ operation: "CHECK_COVERAGE" })} disabled={busy !== null}>{busy === "CHECK_COVERAGE" ? t("coverage.running") : t("coverage.button")}</button>
-          {state.coverage.fact ? <div className="mt-5 space-y-3 rounded-xl border border-amber-900 bg-amber-950/30 p-4 text-sm"><div><ClassificationBadge value="FACT" /> <span className="ml-2 text-neutral-300">{state.coverage.fact.completedShotCount}/{state.coverage.fact.plannedShotCount} {t("coverage.completed")}</span></div><div><ClassificationBadge value="INFERENCE" /> <span className="ml-2 text-neutral-300">{state.coverage.alert?.description}</span></div><div className="font-mono text-xs text-neutral-500">{t("coverage.missing")}: {state.coverage.fact.missingShotIds.join(", ")}</div></div> : null}
-        </div>
-        <div className="rounded-2xl border border-neutral-800 bg-neutral-900/80 p-5 sm:p-6">
-          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-fuchsia-400">05 · {t("timeline.eyebrow")}</div>
-          <h2 className="mt-2 text-xl font-semibold text-white">{t("timeline.title")}</h2>
-          <div className="demo-scroll mt-5 max-h-[28rem] space-y-3 overflow-y-auto pr-1">
-            {state.timeline.length === 0 ? <div className="text-sm text-neutral-500">{t("timeline.empty")}</div> : state.timeline.map((event) => <div key={event.eventId} className="rounded-lg border border-neutral-800 bg-neutral-950/60 p-3"><div className="flex flex-wrap items-center justify-between gap-2"><ClassificationBadge value={event.classification} /><time className="font-mono text-[10px] text-neutral-600">{new Date(event.timestamp).toLocaleTimeString()}</time></div><div className="mt-2 font-mono text-xs text-neutral-300">{event.type}</div><div className="mt-1 truncate text-xs text-neutral-500">{Object.entries(event.payload).map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(", ") : String(value)}`).join(" · ")}</div></div>)}
-          </div>
-        </div>
-      </section>
+
       <details className="rounded-2xl border border-neutral-800 bg-neutral-900/80 p-5 sm:p-6">
         <summary className="cursor-pointer list-none text-sm font-semibold text-blue-300">{t("evidence.title")}</summary>
         <p className="mt-2 text-xs leading-5 text-neutral-500">{t("evidence.description")}</p>
