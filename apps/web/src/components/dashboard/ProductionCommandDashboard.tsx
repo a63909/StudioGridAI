@@ -7,13 +7,15 @@ import type { CommandRouting, DemoState } from "@/lib/demo/types";
 import { DashboardClient } from "./DashboardClient";
 import { ProductionCommandCard } from "./ProductionCommandCard";
 
+type ActiveIntent = CommandRouting["intent"];
+
 export function ProductionCommandDashboard() {
   const [commandState, setCommandState] = useState<DemoState | null>(null);
-  const [activeRouting, setActiveRouting] = useState<CommandRouting | null>(null);
+  const [activeIntent, setActiveIntent] = useState<ActiveIntent | null>(null);
 
   const handleCommandState = (state: DemoState) => {
     setCommandState(state);
-    setActiveRouting(state.commandRouting || null);
+    setActiveIntent(state.commandRouting?.intent || null);
   };
 
   return (
@@ -22,8 +24,8 @@ export function ProductionCommandDashboard() {
       <DashboardClient
         state={commandState}
         onState={setCommandState}
-        activeRouting={activeRouting}
-        onActiveRoutingChange={setActiveRouting}
+        activeIntent={activeIntent}
+        onActiveIntentChange={setActiveIntent}
       />
     </>
   );
