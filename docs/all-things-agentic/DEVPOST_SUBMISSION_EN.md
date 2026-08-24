@@ -14,78 +14,128 @@ The Taskmaster
 
 ## One-line pitch
 
-StudioGrid turns a live film-production disruption into an evidence-backed schedule action through a real Google ADK multi-agent workflow, while reserving consequential approval for a human production manager.
+StudioGrid turns one natural-language production goal into a validated, evidence-backed operational workflow with Gemini, Google ADK, and Vertex AI Agent Engine—autonomously where the agent has authority, with deterministic human approval only when a consequential schedule mutation crosses the authority boundary.
 
 ## Problem
 
-A film production day is a live constraint system. An actor is delayed. Exterior light is disappearing. Locations are available only during limited windows. Scenes are completed out of order, and required coverage may still be missing. One disruption can affect performers, camera, locations, art, continuity, and editorial at once.
+A film production day is not a static schedule. It is a live constraint system.
 
-Traditional production tools record the plan. The hard operational work begins when reality stops matching it.
+Production managers constantly react to actor delays, incomplete shot coverage, scene dependencies, location windows, daylight constraints, work completed out of order, and work that is temporarily blocked. One change can affect performers, camera, locations, art, continuity, editorial, and the rest of the crew at once.
+
+Traditional production tools record the plan. They do not execute the operational reasoning required when reality stops matching it.
 
 ## Solution
 
-StudioGrid AI is a production control room that reasons over structured, changing production state. When an event arrives, its deployed Production Orchestrator routes the work to a specialist agent. The agent evaluates the actual actors, scenes, locations, dependencies, schedule order, daylight constraints, and completed shots; invokes a typed private tool; and persists an actionable result.
+**Give StudioGrid the production problem, not the steps.**
 
-It is not a script generator or a chatbot. It performs a bounded operational workflow.
+The operator writes one bounded production goal in the shared StudioGrid workspace:
+
+> Check SC_05 and make sure all required coverage is complete.
+
+StudioGrid safely classifies that untrusted language, validates a narrow typed intent, runs the deployed Google ADK specialist workflow on Vertex AI Agent Engine, inspects current production state, calls an authenticated private tool, and persists the operational result.
+
+It is not an unrestricted chat-to-tools interface. The public contest build intentionally supports a small verified command surface: exact predefined actor-delay demo facts and the fixed `SC_05` shot-coverage check. Unsupported location, weather, equipment, arbitrary actor/delay, free-form mutation, and approval-bypass commands fail closed.
 
 ## Why this is agentic
 
-The user reports an event, not a solution. For the Maya Reed delay, the user does not select an alternative scene, list affected dependencies, calculate a new order, or construct a recommendation. A real Vertex AI Agent Engine session runs a Google ADK application. The Production Orchestrator delegates to the Schedule Agent, Gemini 3.6 Flash reasons over verified production context, and the agent calls `create_schedule_proposal()` through an authenticated private Tool Server.
+StudioGrid has two deliberately separated reasoning layers.
 
-The result is a durable PENDING recommendation with why, evidence, expected benefit, risks, confidence, affected scenes, and a concrete reorder. That multi-step work is autonomous. A human is involved only where authority should change hands: applying or rejecting a consequential production mutation.
+### Layer 1 — safe command routing
 
-## Golden workflow
+Gemini 3.6 Flash receives the natural-language command as untrusted data. This classifier has **no tools, no mutation authority, and no path to the Tool Server**. It can return only:
 
-1. **FACT:** Maya Reed (`ACT_02`) is delayed by 45 minutes.
-2. The private Control API creates the structured production event.
-3. Vertex AI Agent Engine runs the deployed ADK Production Orchestrator.
-4. The Orchestrator routes the event to the Schedule Agent.
-5. Gemini 3.6 Flash evaluates actor-dependent scenes, eligible alternatives, locations, dependencies, schedule order, and daylight constraints.
-6. The Schedule Agent invokes `create_schedule_proposal()` on the IAM-private Tool Server.
-7. Firestore persists a PENDING recommendation and safe execution evidence.
-8. The agent cannot approve or reject its own recommendation.
-9. A production manager clicks APPROVE.
-10. The Control API applies the proposed reorder and writes a `HUMAN_DECISION` event.
-11. Refreshing the browser shows the same persisted proposal, schedule state, and timeline.
+- `ACTOR_DELAY` for an exact allowlisted synthetic actor/delay fact;
+- `CHECK_COVERAGE` for the fixed shot-coverage workflow; or
+- `UNSUPPORTED`.
 
-## What the agent does autonomously
+Strict Pydantic validation rejects extra fields, invalid actor/delay pairs, and model output outside the allowlist. The raw command stops at this boundary and is never forwarded to the tool-enabled specialist.
 
-- Receives a structured disruption event.
-- Routes the event to the appropriate specialist.
-- Builds context from current production state rather than free-form user instructions.
-- Evaluates constraints and eligible work.
-- Selects and invokes an allowlisted typed tool.
-- Creates a proposal or coverage alert.
-- Persists operational state and safe evidence metadata.
-- Fails closed when a tool rejects an invalid mutation.
+### Layer 2 — operational agent execution
 
-## Why human approval exists
+The private Control API turns the validated route into a typed operation. Vertex AI Agent Engine runs the deployed Google ADK Production Orchestrator, which delegates to the Schedule Agent or Coverage Agent. The specialist receives server-built factual production context—not the raw user command—reasons over that context with Gemini 3.6 Flash, and invokes only typed authenticated tools on the IAM-private Tool Server.
 
-Changing a shooting schedule affects an entire crew. StudioGrid treats that as an authority boundary, not another reasoning step. Agents may create PENDING proposals; they do not receive the human approve/reject tools. The server-side `ApprovalGate` rejects AGENT and SYSTEM callers even if model behavior is compromised.
+The result is durable operational state in Firestore, not just generated text.
 
-The manager does not guide the agent's work. They authorize—or refuse—the already-completed recommendation. This preserves autonomous execution without giving a probabilistic system unilateral control over a high-impact operation.
+## Taskmaster proof — one-command Coverage workflow
+
+The primary golden workflow is:
+
+> Check SC_05 and make sure all required coverage is complete.
+
+After that single command, StudioGrid autonomously:
+
+1. classifies the goal as `CHECK_COVERAGE`;
+2. validates the typed route;
+3. runs the Coverage Agent through the deployed ADK application;
+4. compares actual planned and completed shot state for `SC_05`;
+5. establishes that 1 of 3 required shots is complete (`33.3%`);
+6. identifies missing shots `SH_12` and `SH_13`;
+7. calls `create_coverage_alert` through the private Tool Server;
+8. persists an `OPEN` alert and safe execution evidence in Firestore; and
+9. returns the contextual result and execution ID to the same workspace.
+
+**No additional user step is required after the command.** This is the clearest Taskmaster proof: one natural-language goal → autonomous routing → specialist reasoning → typed tool call → durable operational result.
+
+## Schedule workflow — autonomy with bounded authority
+
+The second proof begins with:
+
+> Maya Reed is 45 minutes late. Keep today's shoot on schedule.
+
+Gemini routes the exact supported fact to `ACTOR_DELAY`. The Schedule Agent receives current actor, scene, location, dependency, completed-work, schedule-order, and daylight facts. It evaluates constraints and calls `create_schedule_proposal` to persist a **PENDING** recommendation with:
+
+- the proposed order;
+- factual evidence;
+- affected scenes;
+- expected benefit;
+- risks; and
+- confidence.
+
+The current schedule remains unchanged until a human production manager approves or rejects the proposal.
+
+**Human approval is not manual orchestration.** The human does not select a replacement scene, enumerate constraints, route agents, or tell the system how to solve the problem. The autonomous workflow is already complete. Approval transfers authority only for the consequential real-world mutation.
+
+**Autonomy where the agent has authority; deterministic human approval where a high-impact mutation crosses an authority boundary.**
+
+## Why Schedule approval does not weaken the Taskmaster story
+
+Coverage demonstrates fully autonomous end-to-end execution with no follow-up action. Schedule demonstrates a different production principle: autonomy is not the same as authority.
+
+Agent routing, constraint analysis, proposal construction, tool execution, evidence creation, and persistence all complete before a human appears. A schedule mutation affects an entire crew, so StudioGrid deliberately keeps that final authority outside the model. The server-side `ApprovalGate` permits only a HUMAN caller to approve or reject the already-defined proposal.
 
 ## Multi-agent architecture
 
-The public Next.js interface runs on Cloud Run. Its server-side BFF obtains a Google ID token to call an IAM-private Control API. The Control API invokes a deployed Vertex AI Agent Engine application. A Google ADK Production Orchestrator delegates to either the Schedule Agent or Coverage Agent. Gemini 3.6 Flash performs model reasoning; specialist agents call typed tools on a second IAM-private Cloud Run service. Firestore stores production state, proposals, alerts, events, demo sessions, and execution evidence.
-
-The AI authority path and human decision path are deliberately separate.
+1. A public browser reaches `studiogrid-web` on Cloud Run.
+2. Its authenticated server-side BFF obtains a Google ID token for the IAM-private Control API.
+3. A tool-less Gemini 3.6 Flash Command Router maps untrusted language to a strict typed intent.
+4. Pydantic validates the allowlist before any specialist workflow runs.
+5. The Control API invokes the deployed Vertex AI Agent Engine application.
+6. The Google ADK Production Orchestrator delegates the typed operation to Schedule or Coverage.
+7. The specialist uses Gemini 3.6 Flash over server-built production context.
+8. Typed authenticated tools call the IAM-private Tool Server.
+9. Firestore stores production state, proposals, alerts, events, demo sessions, and safe execution evidence.
+10. HUMAN APPROVE / REJECT remains a separate path through the Control API for consequential schedule changes.
 
 ## Schedule Agent
 
-For an `ACTOR_DELAYED` event, the Schedule Agent receives factual structured context: the delayed actor, current schedule, actor-scene relationships, candidate scenes, location windows, dependencies, and daylight constraints. It can create only a PENDING proposal. ACT_02/Maya and ACT_03/Daniel exercise the same generic workflow with different actors and schedule effects.
+The Schedule Agent handles the exact allowlisted `ACTOR_DELAYED` demo facts: Maya Reed / `ACT_02` at 45 minutes and Daniel Osei / `ACT_03` at 30 minutes. It evaluates current production constraints and may create only a PENDING proposal. It has no approval tool.
 
 ## Coverage Agent
 
-The Coverage Agent compares planned and completed shots for a real scene in the synthetic production state. In the golden demo it identifies `SH_12` and `SH_13` as missing, then creates an OPEN coverage alert through `create_coverage_alert()`. This is a second operational workflow, not text generated from a prompt.
+The Coverage Agent compares planned and completed shots for the fixed public `SC_05` workflow. It identifies `SH_12` and `SH_13` as missing and persists an OPEN alert via `create_coverage_alert`. The user does not need to press a second workflow button.
 
 ## Google ADK
 
-Google ADK 2.6.3 defines the deployed orchestration graph and specialist agents. The Production Orchestrator transfers work to the Schedule Agent or Coverage Agent, and the ADK application is packaged for Vertex AI Agent Engine.
+Google ADK 2.6.3 defines the deployed Production Orchestrator and Schedule/Coverage specialists. The application is packaged for and executed on Vertex AI Agent Engine.
 
 ## Gemini 3.6 Flash
 
-StudioGrid uses `gemini-3.6-flash` through Vertex AI. The model reasons over server-built production context and selects typed tools. The application persists safe operational metadata—agent, model, execution ID, correlation ID, duration, tool name, status, and evidence references—rather than prompts or chain-of-thought.
+StudioGrid uses `gemini-3.6-flash` through Vertex AI in two bounded roles:
+
+- a tool-less, zero-mutation command classifier; and
+- specialist reasoning over server-built typed production context.
+
+The application stores safe operational metadata—agent, model, execution ID, correlation ID, duration, typed tool name, status, and evidence references—rather than raw commands, credentials, or chain-of-thought.
 
 ## Vertex AI Agent Engine
 
@@ -93,61 +143,65 @@ The live ADK application is deployed as:
 
 `projects/729921508335/locations/europe-west3/reasoningEngines/5132986471388545024`
 
-The public demo invokes this remote resource for Schedule and Coverage flows. It is configured to scale from zero with a bounded maximum instance count.
+The public demo invokes this remote resource for the Schedule and Coverage workflows.
 
 ## Cloud Run
 
-Three services establish a deliberate public/private boundary:
+- `studiogrid-web` — public judge-facing Next.js application and authenticated BFF.
+- `studiogrid-control-api` — IAM-private control plane, invoked by the web runtime identity.
+- `studiogrid-tool-server` — IAM-private typed-tool surface, invoked by the Agent Engine runtime identity.
 
-- `studiogrid-web` — public judge-facing Next.js application.
-- `studiogrid-control-api` — private control plane; only the web runtime identity invokes it.
-- `studiogrid-tool-server` — private typed-tool surface; the Agent Engine runtime identity invokes it.
-
-Unauthenticated requests to both private services are denied.
+Unauthenticated requests to the private services are denied.
 
 ## Firestore
 
-Firestore is the durable source for demo application state, proposals, coverage alerts, production events, execution evidence, and per-browser demo sessions. Approval changes schedule state, and refresh persistence demonstrates that the result is not a client-side animation.
+Firestore is the durable source for synthetic demo state, proposals, coverage alerts, production events, execution evidence, and per-browser demo sessions. Coverage alerts and schedule recommendations survive the request boundary; approved/rejected schedule decisions survive refresh.
 
 ## Cloud Trace
 
-Agent Engine telemetry and correlation identifiers connect a user-visible action to cloud execution. Repository evidence includes a sampled Cloud Trace identifier while excluding messages, prompts, credentials, and chain-of-thought.
+Execution and correlation identifiers connect a visible action to managed cloud telemetry. The evidence surface intentionally excludes messages, raw commands, credentials, and chain-of-thought.
 
-## Security
+## Security and prompt-injection defense
 
-- Browser traffic reaches only the public web service.
-- The BFF validates a fixed action schema, caps body size, rate-limits by demo session/IP, and uses a server-side identity token.
-- The Control API accepts only fixed actor/delay combinations and rejects extra fields.
-- Agents call an isolated, IAM-private Tool Server and never access Firestore directly.
-- Typed Pydantic schemas validate tool inputs and state transitions.
+- The public UI accepts natural-language production commands, but limits their length and rate.
+- Raw language enters only the isolated tool-less Gemini Command Router.
+- The router has no tools, no mutation capability, and cannot call the Tool Server.
+- Its output is validated against strict Pydantic/typed allowlists.
+- Only a validated typed operation enters the existing agent workflow.
+- Specialist agents receive server-built production context, never the raw command.
+- Unsupported commands return `UNSUPPORTED` and never reach a specialist.
+- Agents use typed tools on an IAM-private service and never access Firestore directly.
 - Agent-created schedule proposals must be PENDING and reference known scenes.
-- Human approve/reject operations are enforced server-side.
+- The server-side `ApprovalGate` rejects AGENT and SYSTEM approval/rejection callers even if a model were compromised.
 - ADC and service identities are used; no service-account JSON keys are stored in the repository.
-
-## Prompt-injection defense
-
-The public demo never forwards arbitrary user prompts into the agent. Its API accepts a small allowlist of structured operations, and Pydantic models forbid additional fields such as `prompt`. More importantly, safety does not depend on the model obeying text instructions: even a compromised agent attempting `approve_schedule_proposal` or `reject_schedule_proposal` is rejected by the server-side approval gate. Tests exercise both cases.
 
 ## Failure handling
 
-Tool authorization and schema checks fail closed. A recorded Agent Engine failure probe attempted an invalid scene mutation, produced `ToolServerError`, persisted an ERROR execution trace, and created zero new proposals. Firestore startup failure disables the AI runtime rather than silently switching to an unverified cloud state.
+Routing, schemas, authorization, and tools fail closed. Invalid classifier output, unsupported commands, invalid actor/delay pairs, or invalid tool mutations do not silently broaden the workflow. A recorded invalid-scene probe produced `ToolServerError`, persisted an ERROR execution trace, and created zero new proposals. Firestore startup failure disables the AI runtime instead of switching to an unverified state.
 
 ## FACT / INFERENCE / RECOMMENDATION / HUMAN_DECISION
 
-StudioGrid keeps four categories distinct in data and UI:
+- **FACT:** an observed production state, such as Maya Reed being delayed 45 minutes or only `SH_11` being complete for `SC_05`.
+- **INFERENCE:** actor-dependent scenes are blocked, or required shots remain missing.
+- **RECOMMENDATION:** a specific proposed schedule reorder.
+- **HUMAN_DECISION:** approve or reject the persisted schedule proposal.
 
-- **FACT:** Maya Reed is delayed by 45 minutes.
-- **INFERENCE:** actor-dependent scenes are temporarily blocked and eligible alternatives exist.
-- **RECOMMENDATION:** reorder specific production work.
-- **HUMAN_DECISION:** approve or reject the persisted recommendation.
-
-This prevents model output from being presented as an observed fact and preserves a reviewable production timeline.
+Keeping these categories separate prevents model conclusions from being presented as observed facts.
 
 ## Public demo
 
 <https://studiogrid-web-729921508335.europe-west3.run.app>
 
-Recommended path: Reset Demo → Maya Reed 45m → wait for PENDING proposal → inspect evidence → approve → compare before/after → inspect `HUMAN_DECISION` → run Coverage Check.
+Recommended path:
+
+1. Reset Demo if needed.
+2. Enter `Check SC_05 and make sure all required coverage is complete.`
+3. Inspect `SC_05`, `1/3`, `33.3%`, `SH_12`, `SH_13`, `OPEN`, runtime status, and Technical details.
+4. Reset and enter `Maya Reed is 45 minutes late. Keep today's shoot on schedule.`
+5. Inspect the PENDING recommendation and unchanged schedule.
+6. Optionally approve/reject to demonstrate the human authority boundary and durable audit.
+
+Public repository: <https://github.com/a63909/StudioGridAI>
 
 ## Technologies used
 
@@ -162,34 +216,36 @@ Recommended path: Reset Demo → Maya Reed 45m → wait for PENDING proposal →
 
 ## Data sources
 
-StudioGrid uses the original, fictional **LAST LIGHT** production package stored in `demo/last_light/production_package.json`. It contains synthetic actors, locations, scenes, shots, dependencies, continuity facts, and a shooting schedule. The demo uses no real customer or film-studio data.
+StudioGrid uses the original fictional **LAST LIGHT** package in `demo/last_light/production_package.json`. It contains synthetic actors, locations, scenes, shots, dependencies, continuity facts, and a shooting schedule. No real customer or film-studio data is used.
 
 ## Findings and learnings
 
-The most important design lesson was that autonomy and authority are different. An agent can perform extensive operational work while a deterministic service controls the final high-impact mutation. Separating those concerns made the system easier to test, audit, and explain.
+The strongest agent boundary is not simply “human or no human.” It is the boundary between work the system can safely complete and authority it should not hold. Coverage can finish end-to-end. Schedule reasoning and proposal creation can also finish end-to-end, while the high-impact mutation remains deterministic and human-authorized.
 
-We also learned that a convincing agent demo needs durable evidence. A polished answer is not enough: the proposal, tool result, state change, and human decision must survive refresh and remain traceable to the remote execution.
+We also learned that durable proof matters more than fluent output. A judge should be able to connect the visible result to a real Agent Engine execution, typed tool call, persisted state, and audit record.
 
 ## Challenges
 
+- Safely converting natural language to typed operations without exposing tools to the classifier.
 - Packaging a real ADK multi-agent application for Agent Engine while keeping its Tool Server private.
 - Preserving service-to-service identity across public web, private control, managed agent runtime, and private tools.
-- Making a deterministic reset coexist with durable Firestore evidence.
-- Exposing enough technical proof for judges without exposing prompts, credentials, or chain-of-thought.
-- Keeping the approval gate outside the model's authority without turning the workflow into manual step-by-step guidance.
+- Making deterministic reset coexist with durable Firestore evidence.
+- Showing execution proof without exposing raw commands, credentials, or chain-of-thought.
+- Separating autonomous work from consequential mutation authority without turning the workflow into manual guidance.
 
 ## What's next
 
-Future work would add opt-in production integrations, richer constraint solvers, resumable event ingestion, role-specific notifications, and expanded observability. Those are roadmap items, not claims about the current demo. The current submission is intentionally scoped to a verified synthetic production package and two complete operational workflows.
+Future work could add explicitly authorized production integrations and more typed intents for locations, weather, equipment, and richer constraint solving. Those are roadmap items, not claims about the current contest build. The current product intentionally exposes only its verified narrow allowlist.
 
 ## Technical evidence
 
+- `services/api/command_router.py`
+- `tests/unit/test_production_command_router.py`
 - `docs/evidence/agent-engine-cloud-3b.json`
 - `docs/evidence/cloud-demo-3c/deployment.json`
 - `docs/evidence/cloud-demo-3c/browser-verification.md`
 - `docs/all-things-agentic/architecture.mmd`
 - `docs/all-things-agentic/assets/studiogrid-architecture.png`
 - `tests/unit/test_agent_engine_cloud.py`
-- `tests/unit/test_phase2_agents.py`
 - `tests/unit/test_approval_gates.py`
 - `tests/unit/test_tool_authorization.py`

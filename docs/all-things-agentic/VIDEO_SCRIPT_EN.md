@@ -1,80 +1,84 @@
-# StudioGrid AI — 3:37 demo script
+# StudioGrid AI — 3:42 demo script
 
-Target runtime: **3:37**. Hard stop: **3:50**. The official maximum is 4:00, and only the first four minutes may be evaluated.
+Target runtime: **3:42**. Hard stop: **3:50**. The official maximum is approximately four minutes, and only the first four minutes may be evaluated.
 
-Record the ACT_02 section as one continuous, unedited screen capture. Use English narration or burn in accurate English subtitles. Never expose browser profiles, credentials, tokens, private prompts, or unrelated cloud resources.
+Record each command execution continuously and unedited. Use English narration or accurate English subtitles. Never expose browser profiles, credentials, tokens, raw commands in cloud logs, private prompts, or unrelated cloud resources.
 
-## 0:00–0:18 — Open on the problem
+## 0:00–0:20 — Open on the problem
 
-**Visual:** Public `.run.app` URL in the browser address bar; StudioGrid dashboard and LAST LIGHT title visible.
-
-**Narration:**
-
-> A film production day is a live constraint system. An actor is delayed, daylight is disappearing, locations have narrow windows, and every change affects multiple departments. Traditional tools record the plan. StudioGrid performs the operational work when reality changes.
-
-## 0:18–0:35 — Agentic premise
-
-**Visual:** Architecture diagram, centered on the action path; briefly highlight the separate human boundary.
+**Visual:** Public `.run.app` URL, StudioGrid workspace, and LAST LIGHT title.
 
 **Narration:**
 
-> StudioGrid is a deployed Google ADK multi-agent workflow on Vertex AI Agent Engine and Gemini 3.6 Flash. The agent may analyze, route, call tools, and persist a recommendation. It may not approve its own consequential schedule change.
+> A film production day is a live constraint system. Actor delays, missing shots, locations, dependencies, completed work, and daylight can invalidate a plan in minutes. Traditional tools record the schedule. StudioGrid performs the operational work when reality changes.
 
-## 0:35–0:48 — Reset and establish factual state
+## 0:20–0:40 — Agentic premise and safe routing
 
-**Visual:** Return to public dashboard. Click **Reset Demo**. Show connected Agent Engine, Gemini, private Tool Server, and Firestore indicators.
-
-**Narration:**
-
-> This is the public Cloud Run application, using the fictional LAST LIGHT production package. I am resetting its synthetic state. There is no localhost and no customer data.
-
-## 0:48–1:18 — Live, unedited Maya execution
-
-**Visual:** Select Maya Reed and click **Simulate delay — 45 min** exactly once. Keep recording while the running state is visible. Do not cut or accelerate.
+**Visual:** Architecture diagram. Trace browser → public web → private Control API → tool-less Gemini Command Router → typed validation. Then point to Agent Engine and the separate human boundary.
 
 **Narration:**
 
-> Maya Reed is now 45 minutes late. I am reporting the fact—not choosing a replacement scene or telling the agent how to reorder the day. The private Control API invokes the remote Agent Engine. Its Production Orchestrator delegates to the Schedule Agent, which reasons over actors, scenes, locations, completed shots, dependencies, schedule order, and daylight constraints.
+> Give StudioGrid the production problem, not the steps. Raw language reaches only a Gemini classifier with no tools and no mutation authority. A strict typed allowlist then starts the deployed Google ADK workflow on Vertex AI Agent Engine. Specialists never receive the raw command.
 
-## 1:18–1:48 — Proof of autonomous action
+## 0:40–0:52 — Clean synthetic state
 
-**Visual:** PENDING proposal. Pan or scroll through WHY, evidence, reorder, expected benefit, risks, and confidence. Expand Technical Evidence and show provider, agent, model, execution/correlation IDs, duration, tool name, and evidence reference.
-
-**Narration:**
-
-> The workflow has completed its autonomous work. The Schedule Agent called the typed `create_schedule_proposal` tool, and Firestore now holds this PENDING recommendation. Here are its rationale, factual evidence, concrete reorder, risks, confidence, and safe remote-execution metadata. No prompt or chain-of-thought is exposed.
-
-## 1:48–2:18 — Safety boundary and real mutation
-
-**Visual:** Point to “human only.” Click **Approve as human**. Show APPROVED state, schedule BEFORE/AFTER, and the `HUMAN_DECISION` event. Refresh the page and show the state remains.
+**Visual:** Return to the public dashboard. Click **Reset Demo**. Show the unified command workspace.
 
 **Narration:**
 
-> The AI cannot apply it. Approval and rejection are server-side human-only tools, so prompt injection cannot grant the model that authority. I approve as the production manager. The Control API applies the already-specified reorder, records a HUMAN_DECISION, and Firestore preserves it across refresh.
+> This is the public Cloud Run application using fictional LAST LIGHT data. There is no localhost and no customer information.
 
-## 2:18–2:42 — Coverage Agent
+## 0:52–1:42 — Primary Taskmaster proof: Coverage
 
-**Visual:** Click **Coverage Check**. Show factual count, OPEN alert, and missing `SH_12`, `SH_13`.
-
-**Narration:**
-
-> A second specialist performs another operational workflow. The Coverage Agent compares actual planned and completed shots. It finds that SH_12 and SH_13 are still missing and persists an open alert. This is computed from production state, not generated from a chat prompt.
-
-## 2:42–3:12 — Visible Google Cloud proof
-
-**Visual:** Three prepared cloud views, with unrelated data hidden: (1) Agent Engine resource and region; (2) Cloud Run services showing public web and private Control/Tool services; (3) Firestore record or safe execution evidence. Keep identifiers readable.
+**Visual:** Enter `Check SC_05 and make sure all required coverage is complete.` Click **Run** once. Keep the real loading state visible without cuts or speed-up. Show the contextual result.
 
 **Narration:**
 
-> The backend is running on Google Cloud. This is the deployed Vertex AI Agent Engine resource in europe-west3. Cloud Run exposes only the web service publicly; the Control API and Tool Server require authenticated service identities. Firestore stores the proposal, event timeline, schedule state, and execution evidence.
+> I am giving StudioGrid one goal, not a workflow. The tool-less Gemini router classifies it as CHECK_COVERAGE. The private Control API invokes the remote Agent Engine, the ADK Production Orchestrator delegates to the Coverage Agent, and the specialist compares actual planned and completed shot state.
 
-## 3:12–3:37 — Architecture and close
-
-**Visual:** Full architecture diagram. Animate or point along browser → web → private control → Agent Engine → agents/Gemini → private tools → Firestore, then the separate human path.
+**Visual:** Show `SC_05`, `1/3`, `33.3%`, `SH_12`, `SH_13`, and `OPEN`. Expand **Technical details** briefly.
 
 **Narration:**
 
-> StudioGrid separates reasoning, tools, durable state, and authority. Gemini and ADK do the complex operational work; deterministic services enforce what the agent may change. StudioGrid AI does not just generate a production plan. It helps production adapt when reality changes.
+> SC_05 has one of three required shots. SH_12 and SH_13 are missing, so the agent called the private typed tool and persisted an open alert. Here is the real model, agent, execution ID, and connected cloud path. No second user action was required.
+
+## 1:42–2:33 — Secondary proof: Schedule
+
+**Visual:** Reset. Enter `Maya Reed is 45 minutes late. Keep today's shoot on schedule.` Click **Run** once and retain the loading state.
+
+**Narration:**
+
+> Now the same input receives an exact supported actor-delay fact. Gemini routes the typed ACTOR_DELAY operation to the Schedule Agent. The specialist reasons over actors, scenes, locations, dependencies, completed work, schedule order, and daylight constraints.
+
+**Visual:** Show FACT, PENDING, proposed order, evidence, benefit, risks, confidence, affected scenes, and unchanged current schedule.
+
+**Narration:**
+
+> The autonomous work is complete. Firestore now holds a PENDING recommendation with a concrete order and evidence. I did not choose a replacement scene or guide any intermediate step.
+
+## 2:33–2:58 — Authority is not orchestration
+
+**Visual:** Point to **Approve as human**, **Reject as human**, “the agent cannot make this decision,” and the unchanged schedule. Optionally expand Technical details.
+
+**Narration:**
+
+> Human approval is not manual orchestration. Routing, analysis, tool execution, and persistence are finished. A real schedule change affects an entire crew, so the model cannot authorize it. Autonomy where the agent has authority; deterministic human approval where a high-impact mutation crosses the authority boundary.
+
+## 2:58–3:22 — Visible Google Cloud proof
+
+**Visual:** Prepared sanitized views: Agent Engine resource, Cloud Run services, then Firestore or safe execution evidence.
+
+**Narration:**
+
+> The backend runs on Google Cloud. This is the deployed Agent Engine resource. Cloud Run exposes only the web publicly; the Control API and Tool Server require service identities. Firestore stores alerts, proposals, events, and execution evidence.
+
+## 3:22–3:42 — Architecture and close
+
+**Visual:** Full architecture diagram. Trace language to the isolated router, typed operation to ADK specialists, private tools to Firestore, and the separate human path.
+
+**Narration:**
+
+> StudioGrid separates untrusted language, agent reasoning, typed tools, durable state, and real-world authority. It does not just generate a production plan. It safely carries out the operational workflow when production reality changes.
 
 **End card:**
 
@@ -86,10 +90,12 @@ The Taskmaster
 
 ## Recording checks
 
-- One continuous unedited capture from the ACT_02 click through PENDING result.
 - Public `.run.app` URL visible.
-- Actual loading time retained.
+- Coverage command and result captured continuously and unedited.
+- Schedule command and PENDING result captured continuously and unedited.
+- No removed Maya/Daniel/Coverage direct-action controls are mentioned.
+- Actual cloud latency retained.
 - Backend Google Cloud proof readable.
 - English narration/subtitles accurate.
-- Final exported runtime ≤ 4:00; target 3:37.
-- Video set publicly visible on YouTube or Vimeo only when the user explicitly publishes it.
+- Export runtime ≤ 4:00; target 3:42.
+- Publish publicly on YouTube or Vimeo only when the user explicitly authorizes it.

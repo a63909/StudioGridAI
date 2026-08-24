@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The public StudioGrid demo now exposes one natural-language **Production Command** surface above the existing diagnostic controls. The operator states the production problem once; StudioGrid chooses one supported workflow and executes it through the same verified cloud control plane.
+The public StudioGrid demo exposes one natural-language **Production Command** surface as its only production workflow entry point. The operator states the production problem once; StudioGrid chooses one supported workflow and returns the contextual result in the same workspace.
 
 This is intentionally **not** an unrestricted chat-to-tools interface.
 
@@ -53,4 +53,4 @@ Applying a schedule mutation remains HUMAN-only because changing a shooting orde
 
 The public command router returns `UNSUPPORTED` for location outages, weather, equipment failures, arbitrary actor/delay combinations, free-form mutations, and requests to bypass approval. It does not silently coerce an unsupported command into a supported demo fact.
 
-The existing direct demo buttons remain available as deterministic diagnostic shortcuts and evidence probes; the Production Command surface is the intended product-style entry point for judging.
+The production dashboard does not expose parallel direct-action controls. Reset clears the active command result and returns the same unified workspace. Internal typed operations remain implementation details behind the validated command route, not alternative judge-facing workflows.

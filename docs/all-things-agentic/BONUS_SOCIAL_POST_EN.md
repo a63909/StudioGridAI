@@ -2,11 +2,11 @@
 
 Film production is a live constraint system: actor delays, daylight, location windows, dependencies, and missing coverage can invalidate a schedule in minutes.
 
-I built **StudioGrid AI**, an AI Production Control Room for the Taskmaster track. A real Google ADK multi-agent workflow on Vertex AI Agent Engine + Gemini 3.6 Flash turns a structured production event into a durable schedule proposal, using private typed tools and Firestore.
+I built **StudioGrid AI**, an AI Production Control Room for the Taskmaster track. Give it one bounded natural-language production goal. A tool-less Gemini 3.6 Flash router validates a typed intent, then a real Google ADK workflow on Vertex AI Agent Engine reasons over production state, calls private typed tools, and persists the result in Firestore.
 
-The agent performs the multi-step analysis and action. It can propose, but it cannot approve its own consequential schedule change. A production manager makes that decision, and the before/after state plus `HUMAN_DECISION` evidence persist across refresh.
+The primary proof is fully autonomous: one command checks `SC_05`, finds missing `SH_12`/`SH_13`, and creates an `OPEN` alert with no follow-up click.
 
-The demo also includes a Coverage Agent that finds actual missing shots from planned/completed state.
+A second command creates an evidence-backed PENDING schedule proposal for Maya's 45-minute delay. The agent completes the operational work, but cannot approve its own consequential schedule change. Autonomy is not the same as authority.
 
 Public demo: https://studiogrid-web-729921508335.europe-west3.run.app
 

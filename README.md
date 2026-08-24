@@ -1,44 +1,49 @@
 # StudioGrid AI
 
-**AI Production Control Room** — a deployed multi-agent control plane for film-shoot disruptions.
+**AI Production Control Room** — a deployed multi-agent control plane for film-production operations.
 
-> StudioGrid understands what was planned, what changed, what production work is now blocked, and what eligible work can move next. Agents may propose; a human must approve consequential schedule mutations.
+> **Give StudioGrid the production problem, not the steps.** One natural-language command enters a narrow, fail-closed routing boundary and starts the corresponding operational workflow. The agent acts autonomously where it has authority; a human approves only consequential schedule mutations.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Cloud demo](https://img.shields.io/badge/Cloud%20demo-PUBLIC-blue)](https://studiogrid-web-729921508335.europe-west3.run.app)
-[![AI](https://img.shields.io/badge/AI-Gemini%203.6%20Flash-green)]()
-[![Agent runtime](https://img.shields.io/badge/Runtime-Vertex%20AI%20Agent%20Engine-purple)]()
+![AI](https://img.shields.io/badge/AI-Gemini%203.6%20Flash-green)
+![Agent runtime](https://img.shields.io/badge/Runtime-Vertex%20AI%20Agent%20Engine-purple)
 
 ## Quick judge path
 
 Hosted demo: **<https://studiogrid-web-729921508335.europe-west3.run.app>**
 
-1. Click **Reset Demo**.
-2. Select **Maya Reed** and simulate the fixed **45-minute delay**.
-3. Wait for the real Vertex AI Agent Engine proposal.
-4. Inspect WHY, evidence, risks, confidence, and Technical Evidence.
-5. Click **Approve as human**.
-6. Compare schedule **BEFORE / AFTER**.
-7. Find the persisted `HUMAN_DECISION` in the timeline; refresh to confirm durability.
-8. Run **Coverage Check** and inspect missing `SH_12` / `SH_13`.
+1. Open the hosted demo and click **Reset Demo** if needed.
+2. In **What happened or what needs to be done?**, enter:
+
+   > Check SC_05 and make sure all required coverage is complete.
+
+3. StudioGrid classifies the goal, routes `CHECK_COVERAGE` to the deployed Coverage Agent, inspects the current production state, calls the typed private tool, and persists the result—without another user action.
+4. Inspect `SC_05`, `1/3` completed shots, `33.3%`, missing `SH_12` / `SH_13`, the `OPEN` alert, connected runtime statuses, and the execution ID inside **Technical details**.
+5. Reset, then enter:
+
+   > Maya Reed is 45 minutes late. Keep today's shoot on schedule.
+
+6. Wait for the real Schedule Agent to create a **PENDING** recommendation with evidence, expected benefit, risks, confidence, affected scenes, and a proposed order. The current schedule remains unchanged.
+7. Optionally use **Approve as human** or **Reject as human** to see the consequential authority boundary, persistence, and `HUMAN_DECISION` audit trail.
 
 The demo uses the fictional film **LAST LIGHT**, original synthetic production data, and no real customer information. No localhost or sign-in is required for the hosted judge path.
 
+### Why this is The Taskmaster when Schedule requires approval
+
+Coverage is the clean end-to-end Taskmaster proof: **one natural-language goal → safe routing → agent reasoning → typed tool call → durable operational result**. No follow-up click is required.
+
+Schedule demonstrates a separate production discipline: **autonomy is not the same as authority**. The agent completes routing, constraint analysis, recommendation construction, tool execution, and persistence autonomously. The human does not choose scenes or guide the solution; they only authorize or reject the already-defined high-impact mutation.
+
 ## What StudioGrid does
 
-A film production day is a live constraint system. Actor availability, scene dependencies, location windows, daylight, completed work, and missing coverage interact. Traditional tools record a schedule; StudioGrid performs a bounded operational workflow when reality changes.
+A film production day is a live constraint system. Actor availability, scene dependencies, location windows, daylight, completed work, and missing shots interact. Traditional tools record a schedule; StudioGrid performs a bounded operational workflow when reality changes.
 
-For an actor delay:
+The operator states one production goal in natural language. An isolated Gemini 3.6 Flash classifier with **no tools and no mutation authority** maps that untrusted language to a strict typed allowlist. Only the validated operation enters the existing cloud workflow; specialist agents never receive the raw command.
 
-1. A structured `ACTOR_DELAYED` fact enters the private control plane.
-2. A deployed Google ADK Production Orchestrator routes the event.
-3. The Schedule Agent uses Gemini 3.6 Flash to evaluate current production constraints.
-4. The agent invokes a typed private tool and creates a durable **PENDING** recommendation.
-5. The AI cannot approve or reject its own proposal.
-6. A human production manager decides.
-7. Approval applies the reorder and persists a `HUMAN_DECISION`; rejection leaves the schedule unchanged.
+For the primary Coverage workflow, the Google ADK Production Orchestrator delegates `CHECK_COVERAGE` to the Coverage Agent. It compares planned and completed shots for `SC_05`, finds `SH_12` and `SH_13` missing, calls `create_coverage_alert`, and persists an `OPEN` alert plus safe execution evidence in Firestore—all after one command.
 
-The Coverage Agent independently compares planned and completed shots and creates an alert from actual state.
+For an allowed actor delay, the Orchestrator delegates a typed `ACTOR_DELAYED` fact to the Schedule Agent. The agent evaluates current constraints, invokes `create_schedule_proposal`, and persists a **PENDING** recommendation. Approval applies the already-defined reorder and records `HUMAN_DECISION`; rejection leaves the schedule unchanged.
 
 ## FACT / INFERENCE / RECOMMENDATION / HUMAN_DECISION
 
@@ -59,22 +64,27 @@ The UI and data model keep these categories distinct so model conclusions are no
 Public browser
   → public Cloud Run: studiogrid-web
   → server-side authenticated BFF
-  → private Cloud Run: studiogrid-control-api
+  → IAM-private Cloud Run: studiogrid-control-api
+      → tool-less Gemini 3.6 Flash Command Router
+      → strict typed allowlist / Pydantic validation
+      → typed operation only
   → Vertex AI Agent Engine
   → Google ADK Production Orchestrator
       ├─ Schedule Agent
       └─ Coverage Agent
-  → Gemini 3.6 Flash
-  → authenticated typed tools
-  → private Cloud Run: studiogrid-tool-server
+  → Gemini 3.6 Flash specialist reasoning over server-built context
+  → typed authenticated tools
+  → IAM-private Cloud Run: studiogrid-tool-server
   → Firestore
 
 PENDING proposal → HUMAN APPROVE / REJECT → Control API → durable mutation/audit
 ```
 
+The Command Router is a classifier, not a tool-enabled agent. It cannot call the Tool Server, cannot mutate production state, and cannot grant itself new capabilities. Unsupported location, weather, equipment, arbitrary mutation, approval-bypass, and non-allowlisted actor-delay commands fail closed before any specialist workflow runs.
+
 | Google technology | Current use |
 |---|---|
-| **Gemini 3.6 Flash** | Vertex AI model reasoning over server-built production context |
+| **Gemini 3.6 Flash** | Tool-less command classification plus specialist reasoning over server-built production context |
 | **Google ADK 2.6.3** | Production Orchestrator and Schedule/Coverage specialist graph |
 | **Vertex AI Agent Engine** | Deployed remote ADK application in `europe-west3` |
 | **Cloud Run** | Public Next.js web plus two IAM-private Python services |
@@ -91,7 +101,7 @@ projects/729921508335/locations/europe-west3/reasoningEngines/513298647138854502
 
 | Agent | Responsibility |
 |---|---|
-| `PRODUCTION_ORCHESTRATOR` | Routes structured production events to a specialist |
+| `PRODUCTION_ORCHESTRATOR` | Routes validated typed production events to a specialist |
 | `SCHEDULE_AGENT` | Evaluates actor, scene, location, dependency, timing, and daylight constraints; creates PENDING schedule proposals |
 | `COVERAGE_AGENT` | Compares planned/completed shots and creates coverage alerts |
 
@@ -100,8 +110,10 @@ Phase 1 deterministic agents for continuity, risk, and wrap reporting remain in 
 ## Authority and security boundaries
 
 - The browser reaches only the public web service.
-- The Next.js BFF accepts allowlisted demo actions, caps request size, rate-limits actions, and obtains a server-side Google ID token for the private Control API.
-- The Control API accepts fixed structured events; arbitrary prompt fields are forbidden.
+- The public UI accepts bounded natural-language production commands; the Next.js BFF caps request size, rate-limits actions, and obtains a server-side Google ID token for the private Control API.
+- Raw user language reaches only the isolated Gemini Command Router. The router has no tools, no mutation authority, and no path to call the Tool Server.
+- Router output is validated by strict Pydantic models against `ACTOR_DELAY`, `CHECK_COVERAGE`, or `UNSUPPORTED`; only the resulting typed operation is passed onward.
+- Schedule and Coverage specialists receive server-built production context, not the raw command. Unsupported commands fail closed.
 - Agent Engine calls a separate private Tool Server with its runtime identity.
 - Agents never access Firestore directly.
 - Tool inputs and state transitions are validated with Pydantic schemas.
@@ -162,7 +174,7 @@ npm run dev
 
 Open `http://localhost:3000/en/dashboard`.
 
-The cloud-demo dashboard route intentionally uses the authenticated server-side BFF. To make its action buttons operational, configure `CONTROL_API_URL` and `CONTROL_API_AUDIENCE` to the same HTTPS private Control API URL and run the Next.js server under a Google identity that already has `run.invoker` on that exact service. Do not expose these variables with a `NEXT_PUBLIC_` prefix and do not use service-account key files.
+The cloud-demo dashboard route intentionally uses the authenticated server-side BFF. To make its Production Command workflow operational, configure `CONTROL_API_URL` and `CONTROL_API_AUDIENCE` to the same HTTPS private Control API URL and run the Next.js server under a Google identity that already has `run.invoker` on that exact service. Do not expose these variables with a `NEXT_PUBLIC_` prefix and do not use service-account key files.
 
 The easiest judge path is the hosted public URL above. External evaluators are not expected to receive IAM access to private services.
 
@@ -279,7 +291,9 @@ Fictional 2025 dates inside the production package are story data, not project c
 ## Current limitations
 
 - The public flow is a controlled synthetic demo, not a deployment at a real film studio.
-- Demo buttons trigger events; the current product does not claim continuous ingestion from real call sheets, calendars, email, or IoT systems.
+- The public command surface is intentionally narrow: exact supported actor-delay demo facts and the fixed `SC_05` shot-coverage workflow. It does not claim general production-language understanding.
+- Location, weather, equipment, arbitrary actor/delay, free-form mutation, and approval-bypass commands are unsupported and fail closed.
+- The current product does not claim continuous ingestion from real call sheets, calendars, email, or IoT systems.
 - The verified remote agent graph covers Schedule and Coverage workflows; other deterministic Phase 1 agents are not claimed as deployed cloud agents.
 - Agent Engine scales from zero, so a cold request can take longer than a warm request.
 - The deploy helper contains verified project-specific constants and requires review for another Google Cloud project.

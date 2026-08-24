@@ -8,15 +8,15 @@ The operational problem is not generating a new paragraph of advice. It is decid
 
 That is the problem behind StudioGrid AI, an AI Production Control Room built for the All Things Agentic Hackathon's Taskmaster category.
 
-## From event to action
+## From one goal to action
 
 The demo uses an original fictional film package called LAST LIGHT. Its actors, scenes, locations, shots, dependencies, and schedule are structured synthetic data.
 
-The golden event is deliberately small: Maya Reed is delayed by 45 minutes. The effect is not small. StudioGrid sends a structured `ACTOR_DELAYED` event through a deployed Google ADK application on Vertex AI Agent Engine. A Production Orchestrator routes it to the Schedule Agent. Gemini 3.6 Flash reasons over server-built production context, including actor-scene relationships, current schedule order, candidate scenes, locations, dependencies, and daylight constraints.
+The primary command is deliberately simple: “Check SC_05 and make sure all required coverage is complete.” The user does not choose a workflow or specify tool calls. A tool-less Gemini 3.6 Flash classifier maps the untrusted language to `CHECK_COVERAGE`; strict Pydantic validation accepts only the narrow typed route. The raw command stops there.
 
-The agent then calls a typed `create_schedule_proposal` tool. It does not simply return text. The private Tool Server validates the proposal, confirms that its scene references are real, requires its initial status to be PENDING, persists it in Firestore, and records safe execution evidence.
+The private Control API invokes a deployed Google ADK application on Vertex AI Agent Engine. Its Production Orchestrator delegates the typed operation to the Coverage Agent. The specialist receives server-built planned/completed shot state, identifies `SH_12` and `SH_13` as missing, and calls `create_coverage_alert` on an IAM-private Tool Server. Firestore persists the OPEN alert and safe execution evidence. No second user action is required.
 
-The resulting proposal explains why a reorder is useful, which facts support it, which scenes are affected, the expected benefit, the risks, and confidence. A second workflow sends actual planned/completed shot state to a Coverage Agent, which identifies SH_12 and SH_13 as missing and persists an alert.
+A second command—“Maya Reed is 45 minutes late. Keep today's shoot on schedule.”—routes the exact allowlisted fact to the Schedule Agent. Gemini reasons over actor-scene relationships, schedule order, candidates, locations, dependencies, and daylight. The resulting PENDING proposal explains the reorder, evidence, affected scenes, expected benefit, risks, and confidence.
 
 ## Autonomy is not the same as authority
 
@@ -32,9 +32,9 @@ This distinction made the architecture safer and, surprisingly, more agentic. Th
 
 ## A public/private Google Cloud path
 
-The browser reaches a public Next.js service on Cloud Run. It never receives a private backend URL or credential. A server-side BFF accepts only fixed demo actions and obtains a Google ID token for an IAM-private Control API.
+The browser reaches a public Next.js service on Cloud Run. It never receives a private backend credential. A server-side BFF accepts a bounded natural-language command, applies request limits, and obtains a Google ID token for an IAM-private Control API.
 
-The Control API invokes the deployed Vertex AI Agent Engine application. Agent Engine uses its own runtime identity to call a second IAM-private Cloud Run service that exposes typed agent tools. That service is the only agent path to Firestore.
+Inside Control, a Gemini classifier with no tools and no mutation authority returns only `ACTOR_DELAY`, `CHECK_COVERAGE`, or `UNSUPPORTED`. Pydantic validates that output before Control invokes the deployed Vertex AI Agent Engine application. Agent Engine uses its own runtime identity to call a second IAM-private Cloud Run service that exposes typed agent tools. That service is the only agent path to Firestore.
 
 The separation creates several useful boundaries:
 
@@ -46,9 +46,9 @@ The separation creates several useful boundaries:
 
 ## Defending the authority boundary
 
-Prompt-injection defense starts before the model. The public API schema accepts a short allowlist: reset, fixed actor-delay events, approve/reject a known proposal, and coverage check. Additional fields such as an arbitrary `prompt` are forbidden.
+The public UI does accept natural-language production commands, but raw language reaches only an isolated classifier. The classifier has no tools, cannot mutate state, cannot call the Tool Server, and is instructed to treat the command as untrusted data. Its structured output must pass a strict typed allowlist; unsupported and invalid routes never reach a specialist.
 
-But input filtering is not the main safety control. The important defense is deterministic and server-side. Even if an agent were induced to request `approve_schedule_proposal`, the Tool Registry and Approval Gate reject AGENT and SYSTEM callers. Unit tests exercise that exact case.
+Specialists receive only the typed operation and server-built production context, never the raw command. The consequential defense is also deterministic and server-side: even if a specialist were compromised, the Tool Registry and Approval Gate reject AGENT and SYSTEM callers attempting schedule approval or rejection. Unit tests exercise that exact case.
 
 Failure handling follows the same pattern. A cloud probe asked the agent path to act on a nonexistent scene. The tool rejected it, an ERROR execution trace was stored, and the proposal count did not change. “No mutation” is the success condition for that failure test.
 
@@ -56,7 +56,7 @@ Failure handling follows the same pattern. A cloud probe asked the agent path to
 
 Early agent demos can be convincing while they are running and impossible to audit afterward. StudioGrid treats evidence as part of the product behavior.
 
-Every safe execution record can include an agent name, model name, execution ID, correlation ID, duration, typed tool name, result status, and evidence references. It deliberately excludes credentials, raw prompts, and chain-of-thought. The UI exposes enough metadata for a judge to connect the visible proposal to a real remote Agent Engine run without turning internal model context into a data leak.
+Every safe execution record can include an agent name, model name, execution ID, correlation ID, duration, typed tool name, result status, and evidence references. It deliberately excludes credentials, raw commands, specialist prompts, and chain-of-thought. The UI exposes enough metadata for a judge to connect the visible result to a real remote Agent Engine run without turning internal model context into a data leak.
 
 Firestore also makes the operational outcome visible. After a human approves a schedule proposal, a browser refresh shows the same approved record, reordered schedule, and `HUMAN_DECISION` timeline. That persistence is stronger proof than an animation that only exists in one client session.
 

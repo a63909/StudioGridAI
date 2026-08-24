@@ -1,52 +1,74 @@
+%%{init: {"flowchart": {"curve": "linear", "nodeSpacing": 28, "rankSpacing": 42}}}%%
 flowchart TB
-    classDef public fill:#102a43,stroke:#38bdf8,color:#f8fafc,stroke-width:2px
-    classDef private fill:#27164a,stroke:#a78bfa,color:#f8fafc,stroke-width:2px
-    classDef agent fill:#0f3d2e,stroke:#34d399,color:#f8fafc,stroke-width:2px
-    classDef data fill:#3b2b0b,stroke:#fbbf24,color:#f8fafc,stroke-width:2px
-    classDef human fill:#4a1726,stroke:#fb7185,color:#f8fafc,stroke-width:3px
-    classDef boundary fill:#111827,stroke:#f43f5e,color:#f8fafc,stroke-width:3px,stroke-dasharray: 7 5
+    classDef public fill:#082f49,stroke:#38bdf8,color:#f8fafc,stroke-width:2px
+    classDef control fill:#312e81,stroke:#a5b4fc,color:#f8fafc,stroke-width:2px
+    classDef safety fill:#3f1d4d,stroke:#e879f9,color:#fdf4ff,stroke-width:2px
+    classDef agent fill:#064e3b,stroke:#34d399,color:#ecfdf5,stroke-width:2px
+    classDef private fill:#312e81,stroke:#a78bfa,color:#f8fafc,stroke-width:2px
+    classDef data fill:#422006,stroke:#fbbf24,color:#fffbeb,stroke-width:2px
+    classDef human fill:#4c0519,stroke:#fb7185,color:#fff1f2,stroke-width:3px
+    classDef boundary fill:#111827,stroke:#f43f5e,color:#f8fafc,stroke-width:3px,stroke-dasharray:7 5
+    classDef closed fill:#450a0a,stroke:#ef4444,color:#fef2f2,stroke-width:2px
 
-    Browser["PUBLIC BROWSER<br/>Judge / Production Manager"]:::public
-    Web["PUBLIC CLOUD RUN<br/>studiogrid-web<br/>Next.js"]:::public
-    BFF["SERVER-SIDE AUTHENTICATED BFF<br/>Google ID token · allowlisted demo actions"]:::private
-    Control["PRIVATE CLOUD RUN<br/>studiogrid-control-api<br/>control plane"]:::private
-    Engine["VERTEX AI AGENT ENGINE<br/>deployed ADK application"]:::agent
-    Orchestrator["PRODUCTION ORCHESTRATOR<br/>event routing"]:::agent
-    Schedule["SCHEDULE AGENT<br/>actor / scene / location / dependency / daylight constraints"]:::agent
-    Coverage["COVERAGE AGENT<br/>planned vs completed shots"]:::agent
-    Gemini["GEMINI 3.6 FLASH<br/>Vertex AI"]:::agent
-    Tools["TYPED AUTHENTICATED TOOLS<br/>create proposal · create coverage alert"]:::private
-    ToolServer["PRIVATE CLOUD RUN<br/>studiogrid-tool-server"]:::private
-    Firestore[("FIRESTORE<br/>state · proposals · events · execution evidence")]:::data
-
-    Pending["PENDING PROPOSAL<br/>AGENT MAY PROPOSE"]:::boundary
-    Human["HUMAN APPROVE / REJECT<br/>outside AI authority boundary"]:::human
-    Mutation["CONTROL API STATE MUTATION<br/>schedule change or rejection<br/>HUMAN_DECISION audit event"]:::private
-
-    Browser -->|HTTPS| Web
-    Web --> BFF
-    BFF -->|authenticated service-to-service call| Control
-    Control -->|remote session / query| Engine
-    Engine --> Orchestrator
-    Orchestrator --> Schedule
-    Orchestrator --> Coverage
-    Schedule <-->|reasoning| Gemini
-    Coverage <-->|reasoning| Gemini
-    Schedule --> Tools
-    Coverage --> Tools
-    Tools -->|runtime identity| ToolServer
-    ToolServer -->|durable writes| Firestore
-    Control -->|read durable state| Firestore
-    ToolServer --> Pending
-    Pending -. "AI MAY NOT APPROVE" .-> Human
-    Human -->|explicit browser action| Web
-    Web --> BFF
-    BFF --> Control
-    Control --> Mutation
-    Mutation --> Firestore
-
-    subgraph Authority["CONSEQUENTIAL AUTHORITY BOUNDARY"]
-      Pending
-      Human
-      Mutation
+    subgraph Entry["PUBLIC ENTRY"]
+        direction LR
+        Browser["PUBLIC BROWSER<br/>natural-language production goal"]:::public
+        Web["PUBLIC CLOUD RUN · studiogrid-web<br/>Next.js workspace"]:::public
+        BFF["AUTHENTICATED SERVER-SIDE BFF<br/>Google ID token · request limits"]:::control
+        Browser -->|HTTPS| Web --> BFF
     end
+
+    subgraph ControlPlane["IAM-PRIVATE CONTROL PLANE"]
+        direction LR
+        Control["PRIVATE CLOUD RUN<br/>studiogrid-control-api"]:::private
+        Router["GEMINI COMMAND ROUTER<br/>Gemini 3.6 Flash<br/>NO TOOLS · NO MUTATION AUTHORITY"]:::safety
+        Validate["STRICT TYPED ALLOWLIST<br/>PYDANTIC VALIDATION<br/>ACTOR_DELAY · CHECK_COVERAGE · UNSUPPORTED"]:::safety
+        RawStop["RAW LANGUAGE STOPS HERE<br/>typed context only downstream"]:::boundary
+        Unsupported["UNSUPPORTED<br/>FAIL CLOSED"]:::closed
+        Control --> Router --> Validate
+        Router -.-> RawStop
+        Validate -->|invalid / unsupported| Unsupported
+    end
+
+    subgraph AgentRuntime["VERTEX AI AGENT ENGINE · GOOGLE ADK"]
+        direction LR
+        Engine["VERTEX AI AGENT ENGINE<br/>deployed ADK application"]:::agent
+        Orchestrator["PRODUCTION ORCHESTRATOR<br/>typed operation routing"]:::agent
+        Schedule["SCHEDULE AGENT<br/>production constraints"]:::agent
+        Coverage["COVERAGE AGENT<br/>planned vs completed shots"]:::agent
+        SpecialistGemini["GEMINI 3.6 FLASH<br/>specialist reasoning over<br/>server-built production state"]:::agent
+        Engine --> Orchestrator
+        Orchestrator --> Schedule
+        Orchestrator --> Coverage
+        Schedule <-->|reasoning| SpecialistGemini
+        Coverage <-->|reasoning| SpecialistGemini
+    end
+
+    subgraph PrivateAction["PRIVATE TYPED ACTIONS"]
+        direction LR
+        TypedTools["TYPED AUTHENTICATED TOOLS<br/>create_schedule_proposal<br/>create_coverage_alert"]:::private
+        ToolServer["IAM-PRIVATE CLOUD RUN<br/>studiogrid-tool-server"]:::private
+        CoverageResult["OPEN COVERAGE ALERT<br/>end-to-end autonomous result"]:::data
+        Pending["PENDING PROPOSAL<br/>AGENT MAY PROPOSE"]:::boundary
+        TypedTools -->|runtime identity| ToolServer
+        ToolServer --> CoverageResult
+        ToolServer --> Pending
+    end
+
+    subgraph Authority["CONSEQUENTIAL SCHEDULE AUTHORITY BOUNDARY"]
+        direction LR
+        Human["HUMAN APPROVE / REJECT<br/>outside AI authority"]:::human
+        ApprovalGate["SERVER-SIDE APPROVAL GATE<br/>HUMAN caller required"]:::boundary
+        Mutation["DETERMINISTIC STATE MUTATION<br/>schedule change / rejection<br/>HUMAN_DECISION audit"]:::private
+        Human -->|explicit browser action<br/>via Web · BFF · Control| ApprovalGate --> Mutation
+    end
+
+    Firestore[("FIRESTORE<br/>state · proposals · alerts · events<br/>sessions · execution evidence")]:::data
+
+    Entry -->|authenticated service-to-service call| ControlPlane
+    ControlPlane -->|validated typed operation only| AgentRuntime
+    AgentRuntime -->|typed authenticated tool calls| PrivateAction
+    ControlPlane <-->|typed state read| Firestore
+    PrivateAction -->|durable writes| Firestore
+    PrivateAction -. "PENDING only<br/>AGENT MAY NOT APPROVE" .-> Authority
+    Authority -->|durable mutation + audit| Firestore
