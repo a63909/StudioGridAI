@@ -124,6 +124,7 @@ export function DashboardClient({
   const copy = CONTEXT_COPY[locale];
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [technicalDetailsKey, setTechnicalDetailsKey] = useState(0);
 
   const load = useCallback(async () => {
     try {
@@ -154,7 +155,10 @@ export function DashboardClient({
       const payload = await response.json();
       if (!response.ok) throw new Error(payload?.error?.message || t("errors.action"));
       onState(payload);
-      if (action.operation === "RESET") onActiveIntentChange(null);
+      if (action.operation === "RESET") {
+        onActiveIntentChange(null);
+        setTechnicalDetailsKey((current) => current + 1);
+      }
       if (action.operation === "ACTOR_DELAY") onActiveIntentChange("ACTOR_DELAY");
       if (action.operation === "CHECK_COVERAGE") onActiveIntentChange("CHECK_COVERAGE");
     } catch (actionError) {
@@ -322,7 +326,7 @@ export function DashboardClient({
         </div>
       </section>
 
-      <details className="rounded-2xl border border-neutral-800 bg-neutral-900/80 p-5 sm:p-6" data-testid="technical-details">
+      <details key={`${technicalDetailsKey}-${state.technicalEvidence?.executionId || "none"}`} className="rounded-2xl border border-neutral-800 bg-neutral-900/80 p-5 sm:p-6" data-testid="technical-details">
         <summary className="cursor-pointer list-none text-sm font-semibold text-blue-300">{copy.technicalDetails}</summary>
         <p className="mt-2 text-xs leading-5 text-neutral-500">{t("evidence.description")}</p>
         {commandRouting || state.technicalEvidence ? <dl className="mt-5 grid gap-3 text-xs sm:grid-cols-2 lg:grid-cols-3">

@@ -170,6 +170,8 @@ describe("Production Command contextual dashboard", () => {
     await screen.findByText("StudioGrid AI");
     fireEvent.click(screen.getByRole("button", { name: "Run" }));
     await screen.findByTestId("active-coverage-workflow");
+    fireEvent.click(within(screen.getByTestId("technical-details")).getByText("Technical details"));
+    expect(screen.getByTestId("technical-details")).toHaveAttribute("open");
     fireEvent.click(screen.getByRole("button", { name: "Reset demo" }));
 
     await waitFor(() => expect(screen.queryByTestId("active-coverage-workflow")).not.toBeInTheDocument());
@@ -179,6 +181,7 @@ describe("Production Command contextual dashboard", () => {
     expect(screen.queryByTestId("other-demo-scenarios")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Maya Reed · 45m" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Daniel Osei · 30m" })).not.toBeInTheDocument();
+    expect(screen.getByTestId("technical-details")).not.toHaveAttribute("open");
   });
 
   it("shows a pending Schedule workflow without applying the proposed order", async () => {
