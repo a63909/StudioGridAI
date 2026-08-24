@@ -11,6 +11,7 @@ type ActiveIntent = CommandRouting["intent"];
 const CONTEXT_COPY = {
   en: {
     currentTask: "Current agent task",
+    coverageEyebrow: "Coverage result",
     coverageCompleteTitle: "required coverage is complete",
     coverageIncompleteTitle: "required coverage is incomplete",
     coverageComplete: "All required shots are complete.",
@@ -27,8 +28,6 @@ const CONTEXT_COPY = {
     currentOrder: "Current schedule — unchanged",
     proposedOrder: "Proposed order — not applied",
     appliedOrder: "Applied schedule",
-    otherScenarios: "Other demo scenarios",
-    otherScenariosHint: "These controls are secondary test shortcuts and are not part of the active command result.",
     routingProvider: "Routing provider",
     routingTarget: "Workflow target",
     routingIntent: "Validated intent",
@@ -38,13 +37,14 @@ const CONTEXT_COPY = {
   },
   ru: {
     currentTask: "Текущая задача агента",
-    coverageCompleteTitle: "обязательное покрытие выполнено",
-    coverageIncompleteTitle: "обязательное покрытие неполное",
+    coverageEyebrow: "Проверка отснятого материала",
+    coverageCompleteTitle: "все обязательные кадры сняты",
+    coverageIncompleteTitle: "не все обязательные кадры сняты",
     coverageComplete: "Все обязательные кадры сняты.",
-    coverageIncomplete: "Обязательное покрытие неполное.",
-    completed: "Снято кадров",
+    coverageIncomplete: "Для сцены ещё не сняты все кадры, необходимые для монтажа.",
+    completed: "Снято",
     missing: "Не хватает обязательных кадров",
-    alert: "Предупреждение покрытия",
+    alert: "Предупреждение о недостающих кадрах",
     scheduleTitle: "Результат по расписанию",
     scheduleFact: "Зафиксированное изменение производства",
     scheduleReady: "Агент расписания подготовил производственную рекомендацию.",
@@ -54,8 +54,6 @@ const CONTEXT_COPY = {
     currentOrder: "Текущее расписание — без изменений",
     proposedOrder: "Предложенный порядок — не применён",
     appliedOrder: "Применённое расписание",
-    otherScenarios: "Другие демонстрационные сценарии",
-    otherScenariosHint: "Эти кнопки — вторичные тестовые ярлыки и не относятся к результату текущей команды.",
     routingProvider: "Сервис маршрутизации",
     routingTarget: "Целевой сценарий",
     routingIntent: "Проверенный тип задачи",
@@ -124,7 +122,6 @@ export function DashboardClient({
   const t = useTranslations("cloudDemo");
   const locale = useLocale() === "ru" ? "ru" : "en";
   const copy = CONTEXT_COPY[locale];
-  const [selectedActor, setSelectedActor] = useState<"ACT_02" | "ACT_03">("ACT_02");
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -173,7 +170,6 @@ export function DashboardClient({
   const proposal = state.proposal;
   const before = state.schedule.before || state.schedule.current;
   const after = state.schedule.after;
-  const actorDelay = selectedActor === "ACT_02" ? 45 : 30;
   const latestFact = [...state.timeline].reverse().find((item) => item.type === "ACTOR_DELAYED");
   const persistedWorkflow: ActiveIntent | null = state.proposal
     ? "ACTOR_DELAY"
@@ -194,32 +190,6 @@ export function DashboardClient({
         <StatusDot label={t("runtime.firestore")} value={state.runtime.firestore} />
       </div>
       <p className="mt-4 text-xs leading-5 text-neutral-500">{t("runtime.truth")}</p>
-    </div>
-  );
-
-  const actorDelayControls = (
-    <div className="rounded-2xl border border-neutral-800 bg-neutral-900/80 p-5 sm:p-6">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
-        <div>
-          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-400">{t("actorDelay.eyebrow")}</div>
-          <h2 className="mt-2 text-xl font-semibold text-white">{t("actorDelay.title")}</h2>
-          <p className="mt-1 max-w-xl text-sm leading-6 text-neutral-400">{t("actorDelay.description")}</p>
-        </div>
-        <div className="flex rounded-lg border border-neutral-700 bg-neutral-950 p-1">
-          <button className={`rounded-md px-3 py-2 text-xs ${selectedActor === "ACT_02" ? "bg-blue-600 text-white" : "text-neutral-400"}`} onClick={() => setSelectedActor("ACT_02")} disabled={busy !== null}>{t("actorDelay.maya")}</button>
-          <button className={`rounded-md px-3 py-2 text-xs ${selectedActor === "ACT_03" ? "bg-blue-600 text-white" : "text-neutral-400"}`} onClick={() => setSelectedActor("ACT_03")} disabled={busy !== null}>{t("actorDelay.daniel")}</button>
-        </div>
-      </div>
-      <button className="mt-5 w-full rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-500 disabled:opacity-50 sm:w-auto" onClick={() => void run(selectedActor === "ACT_02" ? { operation: "ACTOR_DELAY", actorId: "ACT_02", delayMinutes: 45 } : { operation: "ACTOR_DELAY", actorId: "ACT_03", delayMinutes: 30 })} disabled={busy !== null || proposal?.status === "PENDING"}>{busy === "ACTOR_DELAY" ? t("actorDelay.running") : t("actorDelay.button", { minutes: actorDelay })}</button>
-    </div>
-  );
-
-  const coverageControls = (
-    <div className="rounded-2xl border border-neutral-800 bg-neutral-900/80 p-5 sm:p-6">
-      <div className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-400">{t("coverage.eyebrow")}</div>
-      <h2 className="mt-2 text-xl font-semibold text-white">{t("coverage.title")}</h2>
-      <p className="mt-1 text-sm leading-6 text-neutral-400">{t("coverage.description")}</p>
-      <button className="mt-5 w-full rounded-lg border border-amber-700 bg-amber-950 px-5 py-3 text-sm font-semibold text-amber-200 hover:bg-amber-900 disabled:opacity-50 sm:w-auto" onClick={() => void run({ operation: "CHECK_COVERAGE" })} disabled={busy !== null}>{busy === "CHECK_COVERAGE" ? t("coverage.running") : t("coverage.button")}</button>
     </div>
   );
 
@@ -247,14 +217,14 @@ export function DashboardClient({
       {isCoverageTask ? (
         <section className="mt-6 border-t border-blue-900/70 pt-6" data-testid="active-coverage-workflow">
           <div className="rounded-2xl border border-amber-800/80 bg-gradient-to-br from-amber-950/45 via-neutral-950 to-neutral-950 p-5 sm:p-6">
-            <div className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-400">{copy.currentTask}</div>
+            <div className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-400">{copy.coverageEyebrow}</div>
             <h2 className="mt-2 text-2xl font-semibold text-white">{state.coverage.fact?.sceneId || "SC_05"} — {state.coverage.fact && state.coverage.fact.missingShotIds.length === 0 ? copy.coverageCompleteTitle : copy.coverageIncompleteTitle}</h2>
             <p className="mt-2 text-sm text-neutral-300">{state.coverage.fact && state.coverage.fact.missingShotIds.length === 0 ? copy.coverageComplete : copy.coverageIncomplete}</p>
             {state.coverage.fact ? (
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 <div className="rounded-xl border border-neutral-800 bg-neutral-950/70 p-4">
                   <div className="text-xs text-neutral-500">{copy.completed}</div>
-                  <div className="mt-1 font-mono text-2xl font-semibold text-white">{state.coverage.fact.completedShotCount}/{state.coverage.fact.plannedShotCount}</div>
+                  <div className="mt-1 font-mono text-2xl font-semibold text-white">{locale === "ru" ? `${state.coverage.fact.completedShotCount} из ${state.coverage.fact.plannedShotCount}` : `${state.coverage.fact.completedShotCount}/${state.coverage.fact.plannedShotCount}`}</div>
                   <div className="mt-1 font-mono text-xs text-neutral-500">{state.coverage.fact.coveragePercent}%</div>
                 </div>
                 <div className="rounded-xl border border-amber-900 bg-amber-950/30 p-4">
@@ -343,15 +313,6 @@ export function DashboardClient({
           <div className="mt-5"><ScheduleColumn title={t("schedule.current")} entries={state.schedule.current} /></div>
         </div>
       </section>
-
-      <details className="rounded-2xl border border-neutral-800 bg-neutral-950/50 p-5" data-testid="other-demo-scenarios">
-        <summary className="cursor-pointer text-sm font-semibold text-neutral-400">{copy.otherScenarios}</summary>
-        <p className="mt-2 text-xs leading-5 text-neutral-600">{copy.otherScenariosHint}</p>
-        <div className="mt-4 grid gap-4 lg:grid-cols-2">
-          {actorDelayControls}
-          {coverageControls}
-        </div>
-      </details>
 
       <section className="rounded-2xl border border-neutral-800 bg-neutral-900/80 p-5 sm:p-6">
         <div className="text-xs font-semibold uppercase tracking-[0.18em] text-fuchsia-400">{t("timeline.eyebrow")}</div>

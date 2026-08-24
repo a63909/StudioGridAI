@@ -27,7 +27,7 @@ vi.mock("next-intl", () => {
       "runtime.title": "Статус облака", "runtime.agentEngine": "Agent Engine", "runtime.gemini": "Gemini", "runtime.toolServer": "Приватный Tool Server", "runtime.firestore": "Firestore", "runtime.truth": "Проверенное состояние.",
       "proposal.eyebrow": "Результат агента", "proposal.title": "Предложение расписания", "proposal.empty": "Нет предложения", "proposal.expectedBenefit": "Ожидаемое восстановление", "proposal.evidence": "Доказательства", "proposal.ordering": "Предложенный порядок", "proposal.affected": "Затронутые сцены", "proposal.risks": "Риски", "proposal.confidence": "Уверенность", "proposal.approve": "Подтвердить как человек", "proposal.reject": "Отклонить как человек", "proposal.humanOnly": "Агент не может принять это решение.", "proposal.approvedHuman": "Подтверждено человеком", "proposal.rejectedHuman": "Отклонено человеком",
       "schedule.eyebrow": "Операционное влияние", "schedule.title": "Расписание до / после", "schedule.description": "Состояние расписания.", "schedule.current": "Текущее", "schedule.before": "До", "schedule.after": "После подтверждения",
-      "coverage.eyebrow": "Агент покрытия", "coverage.title": "Проверить покрытие кадрами", "coverage.description": "Сценарий покрытия", "coverage.button": "Проверить покрытие", "coverage.running": "Выполняется",
+      "coverage.eyebrow": "Проверка отснятого материала", "coverage.title": "Проверить отснятые кадры", "coverage.description": "Проверка обязательных кадров", "coverage.button": "Проверить отснятые кадры", "coverage.running": "Выполняется",
       "timeline.eyebrow": "Аудит", "timeline.title": "Факт → решение", "timeline.empty": "Нет событий",
       "evidence.description": "Только безопасные технические данные.", "evidence.provider": "Среда", "evidence.agent": "Агент", "evidence.model": "Модель", "evidence.execution": "Execution ID", "evidence.session": "Сессия", "evidence.correlation": "Correlation ID", "evidence.duration": "Длительность", "evidence.tools": "Вызовы tools", "evidence.references": "Ссылки", "evidence.rationale": "Краткое объяснение", "evidence.empty": "Нет данных",
       "errors.title": "Ошибка облачного действия.", "errors.load": "Ошибка загрузки", "errors.action": "Ошибка действия",
@@ -150,9 +150,11 @@ describe("Production Command contextual dashboard", () => {
     expect(commandControl.compareDocumentPosition(workflow) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(screen.queryByTestId("production-command-result")).not.toBeInTheDocument();
 
-    const secondary = screen.getByTestId("other-demo-scenarios");
-    expect(secondary).not.toHaveAttribute("open");
-    expect(within(secondary).getByRole("heading", { name: "Simulate actor delay", hidden: true })).toBeInTheDocument();
+    expect(screen.queryByTestId("other-demo-scenarios")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Maya Reed · 45m" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Daniel Osei · 30m" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Simulate 45 min delay" })).not.toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "Check coverage" })).toHaveLength(1);
     const technical = screen.getByTestId("technical-details");
     expect(technical).not.toHaveAttribute("open");
     for (const detail of within(technical).getAllByText("COVERAGE_AGENT")) expect(detail).not.toBeVisible();
@@ -174,9 +176,9 @@ describe("Production Command contextual dashboard", () => {
     expect(screen.queryByTestId("active-schedule-workflow")).not.toBeInTheDocument();
     expect(screen.queryByTestId("production-command-result")).not.toBeInTheDocument();
     expect(screen.getByTestId("studio-grid-workspace")).toContainElement(screen.getByLabelText("What happened or what needs to be done?"));
-    const secondary = screen.getByTestId("other-demo-scenarios");
-    expect(secondary).not.toHaveAttribute("open");
-    expect(within(secondary).getByRole("heading", { name: "Simulate actor delay", hidden: true })).not.toBeVisible();
+    expect(screen.queryByTestId("other-demo-scenarios")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Maya Reed · 45m" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Daniel Osei · 30m" })).not.toBeInTheDocument();
   });
 
   it("shows a pending Schedule workflow without applying the proposed order", async () => {
@@ -197,6 +199,9 @@ describe("Production Command contextual dashboard", () => {
     expect(screen.getByText(/Lighting reset may be required/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Approve as human" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Reject as human" })).toBeInTheDocument();
+    expect(screen.queryByTestId("other-demo-scenarios")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Maya Reed · 45m" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Daniel Osei · 30m" })).not.toBeInTheDocument();
     expect(within(workflow).queryByText("SCHEDULE_AGENT")).not.toBeInTheDocument();
     for (const detail of within(screen.getByTestId("technical-details")).getAllByText("SCHEDULE_AGENT")) expect(detail).not.toBeVisible();
   });
@@ -209,12 +214,21 @@ describe("Production Command contextual dashboard", () => {
     const workspace = screen.getByTestId("studio-grid-workspace");
     expect(within(workspace).queryByText("Команда производству")).not.toBeInTheDocument();
     expect(within(workspace).getByLabelText("Что произошло или что нужно сделать?")).toHaveValue("Проверь SC_05 и убедись, что все обязательные кадры сняты.");
+    expect(within(workspace).getByRole("button", { name: "Проверить отснятые кадры" })).toBeInTheDocument();
     fireEvent.click(within(workspace).getByRole("button", { name: "Выполнить" }));
 
     const workflow = await screen.findByTestId("active-coverage-workflow");
-    expect(within(workflow).getByText(/SC_05 — обязательное покрытие неполное/)).toBeInTheDocument();
+    expect(within(workflow).getByText("Проверка отснятого материала")).toBeInTheDocument();
+    expect(within(workflow).getByText(/SC_05 — не все обязательные кадры сняты/)).toBeInTheDocument();
+    expect(within(workflow).getByText("1 из 3")).toBeInTheDocument();
+    expect(within(workflow).getByText("Не хватает обязательных кадров")).toBeInTheDocument();
     expect(within(workflow).getByText("SH_12")).toBeInTheDocument();
     expect(within(workflow).getByText("SH_13")).toBeInTheDocument();
+    expect(within(workflow).getByText("Предупреждение о недостающих кадрах")).toBeInTheDocument();
+    expect(within(workflow).getByText("OPEN")).toBeInTheDocument();
+    expect(screen.queryByTestId("other-demo-scenarios")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Проверить покрытие" })).not.toBeInTheDocument();
+    expect(document.body).not.toHaveTextContent(/покрыти/iu);
     expect(screen.getByText("Технические детали").closest("details")).not.toHaveAttribute("open");
   });
 });
