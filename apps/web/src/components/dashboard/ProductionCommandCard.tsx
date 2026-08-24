@@ -7,27 +7,27 @@ import type { DemoState } from "@/lib/demo/types";
 
 const COPY = {
   en: {
-    eyebrow: "Production Command",
-    title: "Give StudioGrid the problem, not the steps",
-    description: "Write the production goal once. StudioGrid routes it to the right agent and returns the operational result.",
+    prompt: "What happened or what needs to be done?",
+    description: "Describe the production goal once. StudioGrid will route it and return the operational result here.",
     placeholder: "Check SC_05 and make sure all required coverage is complete.",
-    button: "Run production command",
+    button: "Run",
     running: "StudioGrid is running the agent workflow...",
     supported: "Public build: exact actor-delay replanning and shot-coverage checks. Unsupported commands fail closed.",
-    coverage: "Coverage · end-to-end",
-    schedule: "Schedule · approval boundary",
+    examples: "Try:",
+    coverage: "Check coverage",
+    schedule: "Actor delay",
     error: "Production Command failed safely.",
   },
   ru: {
-    eyebrow: "Команда производству",
-    title: "Опишите StudioGrid проблему, а не шаги",
-    description: "Сформулируйте производственную задачу один раз. StudioGrid сам направит её нужному агенту и покажет рабочий результат.",
+    prompt: "Что произошло или что нужно сделать?",
+    description: "Опишите производственную задачу один раз. StudioGrid направит её и покажет здесь рабочий результат.",
     placeholder: "Проверь SC_05 и убедись, что все обязательные кадры сняты.",
-    button: "Выполнить производственную команду",
+    button: "Выполнить",
     running: "StudioGrid выполняет агентный сценарий...",
     supported: "Публичная версия: точные сценарии задержки актёров и проверка покрытия кадрами. Остальные команды безопасно отклоняются.",
-    coverage: "Покрытие · от начала до конца",
-    schedule: "Расписание · с границей одобрения",
+    examples: "Например:",
+    coverage: "Проверить покрытие",
+    schedule: "Задержка актёра",
     error: "Команда производству безопасно завершилась ошибкой.",
   },
 } as const;
@@ -79,34 +79,32 @@ export function ProductionCommandCard({
   };
 
   return (
-    <section className="mx-auto mt-6 max-w-screen-xl px-4">
-      <div className="overflow-hidden rounded-2xl border border-cyan-800/80 bg-gradient-to-br from-cyan-950/70 via-neutral-950 to-neutral-950 p-5 shadow-2xl shadow-cyan-950/20 sm:p-6">
-        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-300">{copy.eyebrow}</div>
-        <h2 className="mt-2 text-xl font-semibold text-white sm:text-2xl">{copy.title}</h2>
-        <p className="mt-2 max-w-3xl text-sm leading-6 text-neutral-400">{copy.description}</p>
+    <div className="mt-7 border-t border-blue-900/70 pt-6" data-testid="studio-command-control">
+      <label className="text-base font-semibold text-white" htmlFor="studio-production-command">{copy.prompt}</label>
+      <p className="mt-1 max-w-3xl text-sm leading-6 text-neutral-400">{copy.description}</p>
 
-        <form className="mt-5" onSubmit={submit}>
+      <form className="mt-4" onSubmit={submit}>
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-stretch">
           <textarea
-            className="min-h-28 w-full resize-y rounded-xl border border-neutral-700 bg-neutral-950 px-4 py-3 text-sm leading-6 text-white outline-none transition placeholder:text-neutral-600 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-900 disabled:opacity-60"
+            id="studio-production-command"
+            className="min-h-24 w-full flex-1 resize-y rounded-xl border border-neutral-700 bg-neutral-950/80 px-4 py-3 text-sm leading-6 text-white outline-none transition placeholder:text-neutral-600 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-900 disabled:opacity-60"
             value={command}
             maxLength={500}
             onChange={(event) => setCommand(event.target.value)}
             placeholder={copy.placeholder}
             disabled={busy}
-            aria-label={copy.eyebrow}
           />
-          <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-wrap gap-2">
-              <button type="button" className="rounded-full border border-amber-800 bg-amber-950/50 px-3 py-1.5 text-xs text-amber-200 hover:bg-amber-900/60 disabled:opacity-50" onClick={() => setCommand(examples.coverage)} disabled={busy}>{copy.coverage}</button>
-              <button type="button" className="rounded-full border border-blue-800 bg-blue-950/50 px-3 py-1.5 text-xs text-blue-200 hover:bg-blue-900/60 disabled:opacity-50" onClick={() => setCommand(examples.schedule)} disabled={busy}>{copy.schedule}</button>
-            </div>
-            <button type="submit" className="rounded-lg bg-cyan-600 px-5 py-3 text-sm font-semibold text-white hover:bg-cyan-500 disabled:cursor-not-allowed disabled:opacity-50" disabled={busy || command.trim().length < 4}>{busy ? copy.running : copy.button}</button>
-          </div>
-        </form>
+          <button type="submit" className="rounded-lg bg-cyan-600 px-6 py-3 text-sm font-semibold text-white hover:bg-cyan-500 disabled:cursor-not-allowed disabled:opacity-50 lg:self-end" disabled={busy || command.trim().length < 4}>{busy ? copy.running : copy.button}</button>
+        </div>
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+          <span className="text-neutral-500">{copy.examples}</span>
+          <button type="button" className="rounded-full border border-neutral-700 bg-neutral-950/60 px-3 py-1.5 text-neutral-300 hover:border-amber-700 hover:text-amber-200 disabled:opacity-50" onClick={() => setCommand(examples.coverage)} disabled={busy}>{copy.coverage}</button>
+          <button type="button" className="rounded-full border border-neutral-700 bg-neutral-950/60 px-3 py-1.5 text-neutral-300 hover:border-blue-700 hover:text-blue-200 disabled:opacity-50" onClick={() => setCommand(examples.schedule)} disabled={busy}>{copy.schedule}</button>
+        </div>
+      </form>
 
-        <p className="mt-3 text-xs leading-5 text-neutral-500">{copy.supported}</p>
-        {error ? <div role="alert" className="mt-4 rounded-lg border border-red-800 bg-red-950/60 p-3 text-sm text-red-200">{error}</div> : null}
-      </div>
-    </section>
+      <p className="mt-3 text-xs leading-5 text-neutral-500">{copy.supported}</p>
+      {error ? <div role="alert" className="mt-4 rounded-lg border border-red-800 bg-red-950/60 p-3 text-sm text-red-200">{error}</div> : null}
+    </div>
   );
 }

@@ -5,7 +5,6 @@ import { useCallback, useState } from "react";
 import type { CommandRouting, DemoState } from "@/lib/demo/types";
 
 import { DashboardClient } from "./DashboardClient";
-import { ProductionCommandCard } from "./ProductionCommandCard";
 
 type ActiveIntent = CommandRouting["intent"];
 
@@ -30,15 +29,13 @@ export function ProductionCommandDashboard() {
   }, []);
 
   return (
-    <>
-      <ProductionCommandCard onState={handleCommandState} />
-      <DashboardClient
-        state={commandState}
-        onState={handleDashboardState}
-        activeIntent={activeIntent}
-        commandRouting={commandRouting}
-        onActiveIntentChange={handleActiveIntentChange}
-      />
-    </>
+    <DashboardClient
+      state={commandState}
+      onState={handleDashboardState}
+      onCommandState={handleCommandState}
+      activeIntent={activeIntent}
+      commandRouting={commandRouting}
+      onActiveIntentChange={handleActiveIntentChange}
+    />
   );
 }

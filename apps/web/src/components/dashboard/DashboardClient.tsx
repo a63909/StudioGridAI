@@ -4,12 +4,15 @@ import { useCallback, useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import type { CommandRouting, DemoAction, DemoScheduleEntry, DemoState, DemoTimelineEntry, RuntimeConnection } from "@/lib/demo/types";
 
+import { ProductionCommandCard } from "./ProductionCommandCard";
+
 type ActiveIntent = CommandRouting["intent"];
 
 const CONTEXT_COPY = {
   en: {
     currentTask: "Current agent task",
-    coverageTitle: "Coverage result",
+    coverageCompleteTitle: "required coverage is complete",
+    coverageIncompleteTitle: "required coverage is incomplete",
     coverageComplete: "All required shots are complete.",
     coverageIncomplete: "Required coverage is incomplete.",
     completed: "Completed shots",
@@ -35,7 +38,8 @@ const CONTEXT_COPY = {
   },
   ru: {
     currentTask: "Текущая задача агента",
-    coverageTitle: "Результат проверки покрытия",
+    coverageCompleteTitle: "обязательное покрытие выполнено",
+    coverageIncompleteTitle: "обязательное покрытие неполное",
     coverageComplete: "Все обязательные кадры сняты.",
     coverageIncomplete: "Обязательное покрытие неполное.",
     completed: "Снято кадров",
@@ -105,12 +109,14 @@ function ClassificationBadge({ value }: { value: DemoTimelineEntry["classificati
 export function DashboardClient({
   state,
   onState,
+  onCommandState,
   activeIntent,
   commandRouting,
   onActiveIntentChange,
 }: {
   state: DemoState | null;
   onState: (state: DemoState) => void;
+  onCommandState: (state: DemoState) => void;
   activeIntent: ActiveIntent | null;
   commandRouting: CommandRouting | null;
   onActiveIntentChange: (intent: ActiveIntent | null) => void;
@@ -221,17 +227,28 @@ export function DashboardClient({
     <div className="mx-auto max-w-screen-xl space-y-6 px-4 py-6 sm:py-8">
       {error ? <div role="alert" className="rounded-xl border border-red-800 bg-red-950/70 p-4 text-sm text-red-200"><strong className="mr-2">{t("errors.title")}</strong>{error}</div> : null}
 
-      {resolvedIntent ? (
-        <div className="flex justify-end">
+      <section className="overflow-hidden rounded-2xl border border-blue-900/70 bg-gradient-to-br from-blue-950 via-neutral-950 to-neutral-950 p-5 sm:p-8" data-testid="studio-grid-workspace">
+        <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end" data-testid="production-context">
+          <div>
+            <div className="mb-3 inline-flex rounded-full border border-blue-800 bg-blue-950 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-blue-300">{t("cloudDemo")}</div>
+            <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-5xl">StudioGrid AI</h1>
+            <p className="mt-2 text-base text-blue-200 sm:text-lg">{t("subtitle")}</p>
+            <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+              <span className="text-neutral-400">{t("film")}: <strong className="text-white">{state.production.title}</strong></span>
+              <span className="text-neutral-400">{t("shootDay")}: <strong className="font-mono text-white">{state.production.shootDayId}</strong></span>
+              <span className="rounded-full bg-emerald-950 px-3 py-1 text-xs font-semibold text-emerald-300">{state.production.status}</span>
+            </div>
+          </div>
           <button className="rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-2 text-sm font-medium text-neutral-200 hover:border-neutral-500 disabled:opacity-50" onClick={() => void run({ operation: "RESET" })} disabled={busy !== null}>{busy === "RESET" ? t("working") : t("reset")}</button>
         </div>
-      ) : null}
+
+        <ProductionCommandCard onState={onCommandState} />
 
       {isCoverageTask ? (
-        <section className="grid gap-4 lg:grid-cols-[1.5fr_1fr]" data-testid="active-coverage-workflow">
+        <section className="mt-6 border-t border-blue-900/70 pt-6" data-testid="active-coverage-workflow">
           <div className="rounded-2xl border border-amber-800/80 bg-gradient-to-br from-amber-950/45 via-neutral-950 to-neutral-950 p-5 sm:p-6">
             <div className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-400">{copy.currentTask}</div>
-            <h2 className="mt-2 text-2xl font-semibold text-white">{copy.coverageTitle}: {state.coverage.fact?.sceneId || "SC_05"}</h2>
+            <h2 className="mt-2 text-2xl font-semibold text-white">{state.coverage.fact?.sceneId || "SC_05"} — {state.coverage.fact && state.coverage.fact.missingShotIds.length === 0 ? copy.coverageCompleteTitle : copy.coverageIncompleteTitle}</h2>
             <p className="mt-2 text-sm text-neutral-300">{state.coverage.fact && state.coverage.fact.missingShotIds.length === 0 ? copy.coverageComplete : copy.coverageIncomplete}</p>
             {state.coverage.fact ? (
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -255,13 +272,12 @@ export function DashboardClient({
               </div>
             ) : null}
           </div>
-          {runtimePanel}
         </section>
       ) : null}
 
       {isScheduleTask ? (
-        <>
-          <section className="grid gap-4 lg:grid-cols-[1.5fr_1fr]" data-testid="active-schedule-workflow">
+        <div className="mt-6 space-y-4 border-t border-blue-900/70 pt-6" data-testid="active-schedule-workflow">
+          <section>
             <div className="rounded-2xl border border-blue-800/80 bg-gradient-to-br from-blue-950/45 via-neutral-950 to-neutral-950 p-5 sm:p-6">
               <div className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-400">{copy.currentTask}</div>
               <h2 className="mt-2 text-2xl font-semibold text-white">{copy.scheduleTitle}</h2>
@@ -275,7 +291,6 @@ export function DashboardClient({
                     : copy.scheduleWaiting}
               </p>
             </div>
-            {runtimePanel}
           </section>
 
           <section className="rounded-2xl border border-neutral-800 bg-neutral-900/80 p-5 sm:p-6">
@@ -306,23 +321,9 @@ export function DashboardClient({
               {after ? <ScheduleColumn title={proposal?.status === "PENDING" ? copy.proposedOrder : copy.appliedOrder} entries={after} /> : null}
             </div>
           </section>
-        </>
+        </div>
       ) : null}
 
-      <section className="overflow-hidden rounded-2xl border border-blue-900/70 bg-gradient-to-br from-blue-950 via-neutral-950 to-neutral-950 p-5 sm:p-8" data-testid="production-context">
-        <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
-          <div>
-            <div className="mb-3 inline-flex rounded-full border border-blue-800 bg-blue-950 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-blue-300">{t("cloudDemo")}</div>
-            <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-5xl">StudioGrid AI</h1>
-            <p className="mt-2 text-base text-blue-200 sm:text-lg">{t("subtitle")}</p>
-            <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
-              <span className="text-neutral-400">{t("film")}: <strong className="text-white">{state.production.title}</strong></span>
-              <span className="text-neutral-400">{t("shootDay")}: <strong className="font-mono text-white">{state.production.shootDayId}</strong></span>
-              <span className="rounded-full bg-emerald-950 px-3 py-1 text-xs font-semibold text-emerald-300">{state.production.status}</span>
-            </div>
-          </div>
-          {!resolvedIntent ? <button className="rounded-lg border border-neutral-700 bg-neutral-900 px-4 py-2 text-sm font-medium text-neutral-200 hover:border-neutral-500 disabled:opacity-50" onClick={() => void run({ operation: "RESET" })} disabled={busy !== null}>{busy === "RESET" ? t("working") : t("reset")}</button> : null}
-        </div>
       </section>
 
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
@@ -334,32 +335,23 @@ export function DashboardClient({
         <Metric label={t("metrics.session")} value={state.sessionStatus} />
       </section>
 
-      {!resolvedIntent ? (
-        <>
-          <section className="grid gap-4 lg:grid-cols-[1.3fr_1fr]">
-            {actorDelayControls}
-            {runtimePanel}
-          </section>
-          <section className="grid gap-4 lg:grid-cols-2">
-            {coverageControls}
-            <div className="rounded-2xl border border-neutral-800 bg-neutral-900/80 p-5 sm:p-6">
-              <div className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-400">{t("schedule.eyebrow")}</div>
-              <h2 className="mt-2 text-xl font-semibold text-white">{t("schedule.title")}</h2>
-              <div className="mt-5"><ScheduleColumn title={t("schedule.current")} entries={before} /></div>
-            </div>
-          </section>
-        </>
-      ) : null}
+      <section className="grid gap-4 lg:grid-cols-[1fr_1.6fr]">
+        {runtimePanel}
+        <div className="rounded-2xl border border-neutral-800 bg-neutral-900/80 p-5 sm:p-6">
+          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-400">{t("schedule.eyebrow")}</div>
+          <h2 className="mt-2 text-xl font-semibold text-white">{t("schedule.title")}</h2>
+          <div className="mt-5"><ScheduleColumn title={t("schedule.current")} entries={state.schedule.current} /></div>
+        </div>
+      </section>
 
-      {resolvedIntent ? (
-        <details className="rounded-2xl border border-neutral-800 bg-neutral-950/50 p-5" data-testid="other-demo-scenarios">
-          <summary className="cursor-pointer text-sm font-semibold text-neutral-400">{copy.otherScenarios}</summary>
-          <p className="mt-2 text-xs leading-5 text-neutral-600">{copy.otherScenariosHint}</p>
-          <div className="mt-4 grid gap-4 lg:grid-cols-2">
-            {isCoverageTask ? actorDelayControls : coverageControls}
-          </div>
-        </details>
-      ) : null}
+      <details className="rounded-2xl border border-neutral-800 bg-neutral-950/50 p-5" data-testid="other-demo-scenarios">
+        <summary className="cursor-pointer text-sm font-semibold text-neutral-400">{copy.otherScenarios}</summary>
+        <p className="mt-2 text-xs leading-5 text-neutral-600">{copy.otherScenariosHint}</p>
+        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+          {actorDelayControls}
+          {coverageControls}
+        </div>
+      </details>
 
       <section className="rounded-2xl border border-neutral-800 bg-neutral-900/80 p-5 sm:p-6">
         <div className="text-xs font-semibold uppercase tracking-[0.18em] text-fuchsia-400">{t("timeline.eyebrow")}</div>

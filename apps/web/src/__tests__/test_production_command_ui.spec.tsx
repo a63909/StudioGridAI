@@ -133,15 +133,21 @@ describe("Production Command contextual dashboard", () => {
     const fetchMock = installFetch(coverageState());
     render(<ProductionCommandDashboard />);
     await screen.findByText("StudioGrid AI");
-    fireEvent.click(screen.getByRole("button", { name: "Run production command" }));
+    const workspace = screen.getByTestId("studio-grid-workspace");
+    const commandControl = within(workspace).getByTestId("studio-command-control");
+    expect(within(workspace).queryByText("Production Command")).not.toBeInTheDocument();
+    expect(within(workspace).queryByRole("heading", { name: "Give StudioGrid the problem, not the steps" })).not.toBeInTheDocument();
+    expect(within(commandControl).getByLabelText("What happened or what needs to be done?")).toHaveValue("Check SC_05 and make sure all required coverage is complete.");
+    fireEvent.click(within(commandControl).getByRole("button", { name: "Run" }));
 
     const workflow = await screen.findByTestId("active-coverage-workflow");
-    expect(within(workflow).getByText(/Coverage result: SC_05/)).toBeInTheDocument();
+    expect(within(workflow).getByText(/SC_05 — required coverage is incomplete/)).toBeInTheDocument();
     expect(within(workflow).getByText("1/3")).toBeInTheDocument();
     expect(within(workflow).getByText("SH_12")).toBeInTheDocument();
     expect(within(workflow).getByText("SH_13")).toBeInTheDocument();
     expect(within(workflow).getByText("OPEN")).toBeInTheDocument();
-    expect(workflow.compareDocumentPosition(screen.getByTestId("production-context")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(workspace).toContainElement(workflow);
+    expect(commandControl.compareDocumentPosition(workflow) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(screen.queryByTestId("production-command-result")).not.toBeInTheDocument();
 
     const secondary = screen.getByTestId("other-demo-scenarios");
@@ -160,24 +166,28 @@ describe("Production Command contextual dashboard", () => {
     installFetch(coverageState(), { ...baselineState(), technicalEvidence: coverageState().technicalEvidence });
     render(<ProductionCommandDashboard />);
     await screen.findByText("StudioGrid AI");
-    fireEvent.click(screen.getByRole("button", { name: "Run production command" }));
+    fireEvent.click(screen.getByRole("button", { name: "Run" }));
     await screen.findByTestId("active-coverage-workflow");
     fireEvent.click(screen.getByRole("button", { name: "Reset demo" }));
 
     await waitFor(() => expect(screen.queryByTestId("active-coverage-workflow")).not.toBeInTheDocument());
     expect(screen.queryByTestId("active-schedule-workflow")).not.toBeInTheDocument();
     expect(screen.queryByTestId("production-command-result")).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Simulate actor delay" })).toBeInTheDocument();
+    expect(screen.getByTestId("studio-grid-workspace")).toContainElement(screen.getByLabelText("What happened or what needs to be done?"));
+    const secondary = screen.getByTestId("other-demo-scenarios");
+    expect(secondary).not.toHaveAttribute("open");
+    expect(within(secondary).getByRole("heading", { name: "Simulate actor delay", hidden: true })).not.toBeVisible();
   });
 
   it("shows a pending Schedule workflow without applying the proposed order", async () => {
     installFetch(scheduleState());
     render(<ProductionCommandDashboard />);
     await screen.findByText("StudioGrid AI");
-    fireEvent.click(screen.getByRole("button", { name: "Schedule · approval boundary" }));
-    fireEvent.click(screen.getByRole("button", { name: "Run production command" }));
+    fireEvent.click(screen.getByRole("button", { name: "Actor delay" }));
+    fireEvent.click(screen.getByRole("button", { name: "Run" }));
 
     const workflow = await screen.findByTestId("active-schedule-workflow");
+    expect(screen.getByTestId("studio-grid-workspace")).toContainElement(workflow);
     expect(within(workflow).getByText("Schedule result")).toBeInTheDocument();
     expect(within(workflow).getByText("Maya Reed is delayed by 45 minutes.")).toBeInTheDocument();
     expect(screen.getByText("PENDING")).toBeInTheDocument();
@@ -196,11 +206,13 @@ describe("Production Command contextual dashboard", () => {
     installFetch(coverageState());
     render(<ProductionCommandDashboard />);
     await screen.findByText("StudioGrid AI");
-    expect(screen.getByLabelText("Команда производству")).toHaveValue("Проверь SC_05 и убедись, что все обязательные кадры сняты.");
-    fireEvent.click(screen.getByRole("button", { name: "Выполнить производственную команду" }));
+    const workspace = screen.getByTestId("studio-grid-workspace");
+    expect(within(workspace).queryByText("Команда производству")).not.toBeInTheDocument();
+    expect(within(workspace).getByLabelText("Что произошло или что нужно сделать?")).toHaveValue("Проверь SC_05 и убедись, что все обязательные кадры сняты.");
+    fireEvent.click(within(workspace).getByRole("button", { name: "Выполнить" }));
 
     const workflow = await screen.findByTestId("active-coverage-workflow");
-    expect(within(workflow).getByText(/Результат проверки покрытия: SC_05/)).toBeInTheDocument();
+    expect(within(workflow).getByText(/SC_05 — обязательное покрытие неполное/)).toBeInTheDocument();
     expect(within(workflow).getByText("SH_12")).toBeInTheDocument();
     expect(within(workflow).getByText("SH_13")).toBeInTheDocument();
     expect(screen.getByText("Технические детали").closest("details")).not.toHaveAttribute("open");
